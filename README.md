@@ -333,6 +333,7 @@ to look for.
 | 👀 | Review page for people (`localship review`) | ✅ Done |
 | ✅ | GitHub Action that checks pull requests | 🗓️ Planned |
 | 🔎 | Tools that find hardcoded text in Kotlin and Swift | 🗓️ Planned |
+| 👀 | Review page for people (`localship review`) | ✅ Done |
 | 🤖 | AI reviewer | 🗓️ Planned |
 | 🏪 | App Store and Play Store listings | 🗓️ Planned |
 | 📱 | Screenshot checks for cut-off and right-to-left text | 🗓️ Planned |
