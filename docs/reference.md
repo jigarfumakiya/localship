@@ -28,6 +28,7 @@ Everything the tool does, in detail. For getting started, see the [README](../RE
 | `localship submit [file]` | Checks translations (JSON from a file or stdin) and writes the good ones as drafts. Exit code 1 if any are rejected |
 | `localship translate` | Translates with a model API, through the same checks |
 | `localship approve` | Marks drafts approved (or `--reviewed`) |
+| `localship review` | Opens a review page on this computer to edit, approve or reject translations. `--locale`, `--states` (shown at first), `--port`, `--no-open` |
 | `localship remove` | Makes translations untranslated again (`--keys`, `--states draft`), e.g. to reject bad drafts. A person's work needs `--force` |
 | `localship prune` | Removes translations of strings that were deleted, renamed or marked not translatable, and their lockfile records |
 | `localship mcp` | Runs the MCP server over stdio |
@@ -59,7 +60,7 @@ Options:
 
 `localship_plan`, `localship_start`, `localship_status`, `localship_validate`, `localship_detect`, `localship_init`, `localship_add_locales`, `localship_get_context`,
 `localship_update_context`, `localship_next_batch`, `localship_submit`, `localship_approve`, `localship_remove`, `localship_prune`,
-`localship_translate`.
+`localship_translate`, `localship_review`.
 The skills are also served as MCP prompts (`localship`, `localship-setup`, `localship-extract`, `localship-translate`, `localship-review`) for
 clients that don't read skills. Every tool takes an optional `cwd`. Without one, the server works in the project Claude Code
 names in `CLAUDE_PROJECT_DIR`, else the directory it was started in (or `-C <dir>`).
@@ -205,8 +206,9 @@ and it does not make a multi-file update a crash-atomic transaction. Review the 
 validation after an interrupted disk write. Temporary output filenames are unique per write.
 
 **Review and approve.** Drafts already ship in Android and gettext files (String Catalogs mark
-them `needs_review`). Review them with the `localship-review` skill or by hand, then
-`localship approve --locale hi`. To adopt translations made before Localship, run
+them `needs_review`). Review them with the `localship-review` skill, on the page `localship review` opens, or by hand, then
+`localship approve --locale hi`. On the review page, edits go through the same checks as
+`submit` and are saved as drafts; Reject only clears drafts and stale translations. To adopt translations made before Localship, run
 `localship approve --from untracked`. To accept edits made by hand, use `--from edited`.
 
 ## Context files

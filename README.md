@@ -111,6 +111,7 @@ Wherever your app is today, one sentence gets it started.
 | ✏️ You changed some copy | "Update the translations." Only changed strings are redone |
 | 🧹 You deleted or renamed strings | "Clean up old translations." |
 | 👀 Ready to check the result | "Review the Arabic translations." |
+| 🖥️ Want to check them yourself | "Open the review page." Source and translation side by side in your browser |
 
 ## 📦 Formats
 
@@ -193,6 +194,7 @@ Your agent picks these itself; you just ask. 👀 marks tools that only read and
 | `localship_next_batch` 👀 | The next strings to translate, with their context |
 | `localship_submit` | Checks translations and writes the good ones as drafts |
 | `localship_approve` | Marks drafts reviewed or approved, when you say so |
+| `localship_review` | Opens a review page where you edit, approve or reject translations yourself |
 | `localship_remove` | Clears translations so they're redone; keeps your edits unless you ask |
 | `localship_prune` | Removes translations of deleted strings |
 | `localship_translate` | Translates everything missing through a model API, for large apps |
@@ -221,6 +223,7 @@ localship plan hindi arabic                                 # what it takes, bef
 localship start hi,ar --model anthropic:claude-sonnet-5-5   # set up and translate in one go
 localship status                                            # progress per language
 localship validate                                          # exits 1 on errors
+localship review --locale ar                                # review page in your browser
 localship approve --locale hi                               # after review
 localship validate --require-approved                       # release / CI check
 ```
@@ -306,7 +309,8 @@ to look for.
 | 🧩 | Flutter ARB and JSON (i18next, flat, nested) | 🗓️ Planned |
 | ✅ | GitHub Action that checks pull requests | 🗓️ Planned |
 | 🔎 | Tools that find hardcoded text in Kotlin and Swift | 🗓️ Planned |
-| 👀 | AI reviewer, and a review page for human translators | 🗓️ Planned |
+| 👀 | Review page for people (`localship review`) | ✅ Done |
+| 🤖 | AI reviewer | 🗓️ Planned |
 | 🏪 | App Store and Play Store listings | 🗓️ Planned |
 | 📱 | Screenshot checks for cut-off and right-to-left text | 🗓️ Planned |
 
