@@ -15,8 +15,8 @@ You translate. Don't edit translation files by hand.
 ## Running the tool
 
 - If `localship_*` MCP tools are available, use them: `localship_next_batch`, `localship_submit`, …
-- Otherwise run the CLI: `localship <command>`. If it isn't installed, ask to install it once with
-  `npm install -g localship`.
+- Otherwise run the CLI: `localship <command>`, from the project folder or with `-C <folder>`. If
+  it isn't installed, ask to install it once with `npm install -g localship`.
 - No `.localship/config.yaml`? Run the `localship-setup` skill first.
 - A language that isn't configured yet: `localship add-locale <code>` first.
 
@@ -64,12 +64,17 @@ unless the user asks.
      grammatical for its sample counts (Arabic needs six, Russian three, Hindi two, Japanese
      one).
    - Arrays: same number of items, same order.
+   - ICU `select` and other whole ICU messages (`{gender, select, female{…} other{…}}`, Flutter
+     and format.js): keep the argument and every case name exactly, translate only the text
+     inside each case, and keep `other`. The batch's `formats` note says what else the file
+     needs (Flutter: `{count}`, never `#`).
    - Reuse `memory` unless the context differs. Follow the glossary.
    - Keep it about as long as the source. Items with a `role` of button, tab, chip or menu item
      have little room: prefer the shortest natural wording.
    - When the source could mean two things ("Open" as a button or a status, "Balance" as money
      or equilibrium) and the context doesn't settle it, add a short `note` saying how you read
-     it. Reviewers see it. Skip notes when the meaning is clear.
+     it. It's kept in `.localship/lock.json`, not the translation file, and reviewers see it in
+     batches and on the review page. Skip notes when the meaning is clear.
    - Same source text, different meaning ("Delete account" for a sign-in account and for a
      budget): translate each for its meaning and add a `note` saying how they differ, so the
      consistency check doesn't flag it.

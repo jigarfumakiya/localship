@@ -18,7 +18,12 @@ import {
   relativePath,
 } from "../../core/paths.js";
 import { findPlaceholders, type PlaceholderSyntax } from "../../core/placeholders.js";
-import { cldrPluralSpec } from "../../core/plurals.js";
+import {
+  cldrPluralSpec,
+  describeSamples,
+  SAMPLE_DECIMALS,
+  SAMPLE_INTEGERS,
+} from "../../core/plurals.js";
 import {
   child,
   deletePath,
@@ -148,6 +153,12 @@ async function openJson(
     id,
     format: dialect.format,
     label: config.path,
+    ...(dialect.icu.escaping
+      ? {
+          formatNote:
+            "This project uses use-escaping (l10n.yaml): write every apostrophe as '' (l''heure), since a single ' starts quoted text.",
+        }
+      : {}),
     source,
     locales,
     issues,
@@ -172,7 +183,7 @@ async function openJson(
       }
       return { text: value, placeholders: scan.placeholders, tags: [], lints };
     },
-    pluralSpec: (locale) => pluralSpec(locale, dialect),
+    pluralSpec: (locale, message) => pluralSpec(locale, dialect, message),
     writeLocale: (catalog) => writeLocale(catalog),
     removeTranslations: (locale, keys) => removeTranslations(locale, keys),
   };
@@ -230,7 +241,7 @@ async function openJson(
         translatable: hasText(u.message),
         file: rel,
         line: lineOf(u.offset),
-        ...(u.arg ? { attrs: { icuArg: u.arg } } : {}),
+        ...(u.arg ? { attrs: icuAttrs(u.arg, meta.get(u.key)) } : {}),
       };
       const comment = isSource ? describe(meta.get(u.key)) : undefined;
       if (comment) entry.comment = comment;
@@ -477,7 +488,38 @@ function toUnits(
   return units;
 }
 
-function pluralSpec(locale: string, dialect: Dialect): PluralSpec {
+/** The plural argument, and its declared type when the template says (`int`, `num`). */
+function icuAttrs(arg: string, meta: unknown): Record<string, string> {
+  const type = (meta as { placeholders?: Record<string, { type?: unknown }> } | undefined)
+    ?.placeholders?.[arg]?.type;
+  return { icuArg: arg, ...(typeof type === "string" ? { icuType: type } : {}) };
+}
+
+function pluralSpec(
+  locale: string,
+  dialect: Dialect,
+  message?: { forms: string[]; source: Entry },
+): PluralSpec {
+  const spec = baseSpec(locale, dialect);
+  if (!dialect.arb || !message) return spec;
+  // What each form really covers in Flutter: intl gives exactly 0, 1 and 2 to zero, one and
+  // two when the message fills them, before CLDR's rule; an int count is never fractional.
+  const rules = new Intl.PluralRules(locale);
+  const exact = ["zero", "one", "two"];
+  const slot = (n: number) =>
+    n < 3 && message.forms.includes(exact[n] as string) ? exact[n] : rules.select(n);
+  const integer = message.source.attrs?.icuType === "int";
+  for (const f of spec.forms) {
+    const ints = SAMPLE_INTEGERS.filter((n) => slot(n) === f.id);
+    const decimals = integer ? [] : SAMPLE_DECIMALS.filter((n) => rules.select(n) === f.id);
+    if (!ints.length && !decimals.length) continue;
+    f.examples = describeSamples(ints, decimals);
+    f.countImplied = ints.length === 1 && decimals.length === 0;
+  }
+  return spec;
+}
+
+function baseSpec(locale: string, dialect: Dialect): PluralSpec {
   const spec = cldrPluralSpec(locale);
   if (dialect.arb) {
     // intl uses zero, one and two for exactly 0, 1 and 2 in any language, before CLDR's rule.

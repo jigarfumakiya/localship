@@ -46,8 +46,14 @@ export interface Target {
    * are tracked only in the lockfile.
    */
   readonly marksDrafts?: boolean;
-  /** Plural forms this locale needs in this format; undefined when it can't be known. */
-  pluralSpec(locale: string): PluralSpec | undefined;
+  /** What translators must know about this target beyond its format (e.g. Flutter `use-escaping`). */
+  readonly formatNote?: string;
+  /**
+   * Plural forms this locale needs in this format; undefined when it can't be known. `message`
+   * says which forms one message fills and its source entry, for formats where that changes what
+   * each form covers (Flutter: a filled `zero` takes the count 0 away from French `one`).
+   */
+  pluralSpec(locale: string, message?: { forms: string[]; source: Entry }): PluralSpec | undefined;
   /** Writes one locale. Entries absent from `catalog` are left as they are on disk. */
   writeLocale(catalog: Catalog): Promise<WriteResult>;
   /**

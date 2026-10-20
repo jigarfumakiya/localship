@@ -158,7 +158,7 @@ program
 program
   .command("start")
   .description("Set up the config for these languages, then translate with --model if given")
-  .argument("<languages...>", "languages to translate into, as codes or names")
+  .argument("<languages...>", "languages, as codes or names: `ar fr`, `ar,fr` or `Arabic French`")
   .option(
     "-m, --model <provider:model>",
     "translate with this model right away (default: models in the config)",
@@ -194,7 +194,7 @@ program
       console.log("Next: review the drafts, then `localship approve`.");
     } else {
       console.log(
-        'Next: ask your agent to "translate the app", or run `localship start … --model anthropic:claude-sonnet-5-5` to translate here.',
+        "Next: translate with `localship next-batch` and `localship submit` (what an agent does). Without an agent, `localship start … --model <provider:model>` translates through a model API, billed per use.",
       );
     }
     process.exitCode = translated && translated.failed.length > 0 ? 1 : 0;
@@ -266,8 +266,10 @@ program
       opts: { model?: string; force?: boolean; dryRun?: boolean; json?: boolean },
     ) => {
       const g = globals();
-      const text =
-        file === "-" ? await readStdin() : await nodeFs.readFile(path.resolve(g.cwd, file));
+      const abs = path.resolve(g.cwd, file);
+      if (file !== "-" && !(await nodeFs.exists(abs)))
+        throw new UserError(`File not found: ${abs}`);
+      const text = file === "-" ? await readStdin() : await nodeFs.readFile(abs);
       const input = parseSubmitInput(text);
       const project = await openProject(nodeFs, g);
       const result = await submit(project, input.translations, {

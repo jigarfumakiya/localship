@@ -33,7 +33,7 @@ pick the case that fits:
 | An empty String Catalog (0 strings) | Check compiler extraction and target membership, build the relevant targets and platforms, and sync the catalog from the build (`xcrun xcstringstool sync`; a command-line build alone leaves it empty, see `localship-extract`), then detect again |
 | A gettext template with no translations | **B**, after confirming where new `.po` files go (detect suggests a path) |
 | Nothing, with a hint about Android or Xcode | **C. Text is hardcoded**: nothing to set up until the text is in resources; the `localship-extract` skill moves it, if the user asks |
-| Only formats listed as "not supported yet" (Flutter ARB, JSON, `.strings` …) | Say so plainly; Localship can't translate those yet |
+| Only formats listed as "not supported yet" (`.strings`, YAML, `.resx` …) | Say so plainly; Localship can't translate those yet |
 
 ## 2. Init
 

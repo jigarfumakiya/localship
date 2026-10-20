@@ -18,8 +18,12 @@ export function textChecks(
   const target = visible(t);
   const language = opts.locale?.split("-")[0] ?? "";
 
-  // A form used for one number only may spell it out ("one note", "ملاحظتان").
-  if (!opts.countImplied) {
+  // A form used for one number only may spell it out ("one note", "ملاحظتان"). A translation
+  // that shows the count where the source wrote the number ("{count} tâche" for "1 task", as
+  // French `one` also covers 0) shows it too.
+  const isCount = (p: { type?: string }) => /^l{0,2}[diu]$/.test(p.type ?? "");
+  const showsCount = t.placeholders.some(isCount) && !s.placeholders.some(isCount);
+  if (!opts.countImplied && !showsCount) {
     const have = numbers(target);
     for (const n of numbers(source)) {
       // Arabic and Hebrew say "two weeks" with one word, the dual, and "a week" without a 1.

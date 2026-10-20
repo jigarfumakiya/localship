@@ -1,0 +1,14 @@
+{
+  "@@locale": "ar",
+  "appTitle": "المهام",
+  "greeting": "صباح الخير، {name}",
+  "newTaskHint": "ما الذي يجب إنجازه؟",
+  "addTask": "إضافة",
+  "deleteTask": "حذف المهمة",
+  "clearFinished": "مسح المكتملة",
+  "emptyState": "تم إنجاز كل شيء. نتمنى لك يومًا ممتعًا!",
+  "tasksLeft": "{count, plural, zero{اكتملت جميع المهام} one{مهمة واحدة متبقية} two{مهمتان متبقيتان} few{{count} مهام متبقية} many{{count} مهمة متبقية} other{{count} مهمة متبقية}}",
+  "finishedBy": "{gender, select, female{أنهت مهمة} male{أنهى مهمة} other{تم إنهاء مهمة}}",
+  "lastSynced": "آخر مزامنة: {date}",
+  "syncReminder": "يُرجى مزامنة المهام قبل قطع الاتصال بالإنترنت"
+}

@@ -226,6 +226,89 @@ describe("Flutter ARB", () => {
     expect(fixed.rejected).toEqual([]);
   });
 
+  it("tells translators about use-escaping, and accepts {count} where the source wrote 1", async () => {
+    const fs = flutter({
+      "/p/l10n.yaml": "use-escaping: true\n",
+      "/p/lib/l10n/app_en.arb": json({
+        notes: "{count, plural, =0{No notes} =1{1 note} other{{count} notes}}",
+      }),
+    });
+    const p = await open(fs, "/p");
+    const batch = await nextBatch(p, { locales: ["ar"], usages: false });
+    expect(batch.formats.arb).toMatch(
+      /uses use-escaping \(l10n\.yaml\): write every apostrophe as ''/,
+    );
+    expect(
+      (await nextBatch(await open(flutter(), "/p"), { usages: false })).formats.arb,
+    ).not.toMatch(/uses use-escaping/);
+    // French `one` covers 0 and 1, so "{count} note" is right for the source's "One note".
+    const fr = await submit(
+      p,
+      [
+        {
+          locale: "pt-BR",
+          key: "notes",
+          value: {
+            zero: "Nenhuma nota",
+            one: "{count} nota",
+            many: "{count} de notas",
+            other: "{count} notas",
+          },
+        },
+      ],
+      { usages: false, dryRun: true },
+    );
+    expect(fr.rejected).toEqual([]);
+    expect(fr.accepted[0]?.warnings.map((w) => w.code)).not.toContain("number-mismatch");
+  });
+
+  it("knows a filled zero takes 0 from French one, as intl does", async () => {
+    const fs = flutter({
+      "/p/lib/l10n/app_en.arb": json({
+        left: "{count, plural, =0{All done} =1{1 task left} other{{count} tasks left}}",
+        "@left": { placeholders: { count: { type: "int" } } },
+      }),
+    });
+    const p = await open(fs, "/p");
+    const [item] = (await nextBatch(p, { locales: ["pt-BR"], usages: false })).items;
+    // pt-BR `one` is 0 and 1 by CLDR; with zero filled it is only ever 1.
+    expect(item?.pluralForms?.find((f) => f.form === "one")?.examples).toBe("1");
+    const ok = await submit(
+      p,
+      [
+        {
+          locale: "pt-BR",
+          key: "left",
+          value: {
+            zero: "Tudo pronto",
+            one: "1 tarefa restante",
+            many: "{count} de tarefas",
+            other: "{count} tarefas restantes",
+          },
+        },
+      ],
+      { usages: false, dryRun: true },
+    );
+    expect(ok.rejected).toEqual([]);
+    // Without zero, 0 reaches `one`, so it must show the count.
+    const bad = await submit(
+      p,
+      [
+        {
+          locale: "pt-BR",
+          key: "left",
+          value: {
+            one: "1 tarefa restante",
+            many: "{count} de tarefas",
+            other: "{count} tarefas restantes",
+          },
+        },
+      ],
+      { usages: false, dryRun: true },
+    );
+    expect(bad.rejected[0]?.errors.map((e) => e.code)).toContain("plural-count-missing");
+  });
+
   it("reads =1 in a translation as Flutter's one, and writes it back as one", async () => {
     const fs = flutter({
       "/p/lib/l10n/app_ar.arb": json({

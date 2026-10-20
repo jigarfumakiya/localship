@@ -1,0 +1,14 @@
+{
+  "@@locale": "ja",
+  "appTitle": "タスク",
+  "greeting": "おはようございます、{name}さん",
+  "newTaskHint": "何をしますか？",
+  "addTask": "追加",
+  "deleteTask": "タスクを削除",
+  "clearFinished": "完了済みを削除",
+  "emptyState": "すべて片付きました。良い一日を！",
+  "tasksLeft": "{count, plural, zero{すべて完了しました} other{残りのタスク: {count}件}}",
+  "finishedBy": "{gender, select, female{彼女がタスクを完了しました} male{彼がタスクを完了しました} other{タスクが完了しました}}",
+  "lastSynced": "最終同期: {date}",
+  "syncReminder": "オフラインになる前に忘れずに同期してください"
+}

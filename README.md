@@ -285,8 +285,13 @@ Every command, option and config key is in the [reference](docs/reference.md).
 <details>
 <summary><b>Can I try it before using it on my app?</b></summary>
 
-Yes. [examples/android-notes](examples/android-notes) is a small Android app with its Hindi and
-Arabic translations. Open it with Localship installed and ask your agent to add another language.
+Yes. Two examples come with their translations:
+
+- [examples/android-notes](examples/android-notes): a small Android app in Hindi and Arabic.
+- [examples/flutter-app](examples/flutter-app): a small Flutter app in Arabic, French, Hindi and
+  Japanese, translated by a coding agent, with Flutter tests that check every language.
+
+Open one with Localship installed and ask your agent to add another language.
 </details>
 
 <details>

@@ -1,0 +1,14 @@
+{
+  "@@locale": "fr",
+  "appTitle": "Tâches",
+  "greeting": "Bonjour, {name}",
+  "newTaskHint": "Que faut-il faire ?",
+  "addTask": "Ajouter",
+  "deleteTask": "Supprimer la tâche",
+  "clearFinished": "Effacer les terminées",
+  "emptyState": "Vous êtes à jour. Profitez de votre journée !",
+  "tasksLeft": "{count, plural, zero{Tout est fait} one{1 tâche restante} many{{count} de tâches restantes} other{{count} tâches restantes}}",
+  "finishedBy": "{gender, select, female{Elle a terminé une tâche} male{Il a terminé une tâche} other{Une tâche a été terminée}}",
+  "lastSynced": "Dernière synchronisation le {date}",
+  "syncReminder": "N''oubliez pas de synchroniser avant de passer hors ligne"
+}

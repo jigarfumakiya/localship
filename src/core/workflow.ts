@@ -101,7 +101,7 @@ const FORMAT_NOTES: Record<string, string> = {
   po: "gettext PO. Values are plain text; keep placeholders and leading or trailing newlines exactly as in the source.",
   xcstrings:
     "Apple String Catalog. Values are plain text with Apple placeholders (%@, %lld, %1$@); you may number them to reorder.",
-  arb: "Flutter ARB. Values are ICU messages: keep {name} placeholders as written (never translate the name inside braces), and write the count as {count}, never #. For {x, select, …} keep the case names and translate only the text inside each case. If a check reports use-escaping, write an apostrophe as ''.",
+  arb: "Flutter ARB. Values are ICU messages: keep {name} placeholders as written (never translate the name inside braces), and write the count as {count}, never # (Flutter shows # as is). Plural forms zero, one and two also cover exactly 0, 1 and 2 in every language, the same slot as =0, =1 and =2. For {x, select, …} keep the case names and translate only the text inside each case.",
   json: "JSON translation file. Keep placeholders such as {{name}} or {name} exactly, and never translate the name inside them. For ICU {x, select, …} keep the case names and translate only the text inside each case.",
 };
 
@@ -257,7 +257,13 @@ export async function nextBatch(project: Project, opts: BatchOptions = {}): Prom
           ...(handEdited ? { editedByHand: true as const } : {}),
           ...(src.message.kind === "plural" && spec
             ? {
-                pluralForms: spec.forms
+                // Flutter: what each form covers depends on the forms the source fills.
+                pluralForms: (
+                  target.pluralSpec(locale, {
+                    forms: Object.keys(src.message.forms),
+                    source: src,
+                  }) ?? spec
+                ).forms
                   .filter((f) => !f.decimalOnly)
                   .map((f) => ({
                     form: f.id,
@@ -315,7 +321,12 @@ export async function nextBatch(project: Project, opts: BatchOptions = {}): Prom
     formats: Object.fromEntries(
       project.targets
         .filter((t) => usedFormats.includes(t.target.format))
-        .map((t) => [t.target.id, FORMAT_NOTES[t.target.format] ?? t.target.format]),
+        .map((t) => [
+          t.target.id,
+          [FORMAT_NOTES[t.target.format] ?? t.target.format, t.target.formatNote]
+            .filter(Boolean)
+            .join(" "),
+        ]),
     ),
   };
 }
@@ -525,12 +536,23 @@ async function submitUnlocked(
       ...(target.marksDrafts ? { needsReview: true } : {}),
     };
     const findings = [
-      ...checkTranslation(target, target.pluralSpec(locale), src, tgt, {
-        locale,
-        sourceLocale: project.config.sourceLocale,
-        glossary: projectGlossary(project),
-        role: usages ? roleOf(usages.find(target, src)) : undefined,
-      }).filter((f) => f.code !== "plural-missing-category" && f.code !== "plural-extra-category"),
+      ...checkTranslation(
+        target,
+        target.pluralSpec(
+          locale,
+          message.kind === "plural"
+            ? { forms: Object.keys(message.forms), source: src }
+            : undefined,
+        ),
+        src,
+        tgt,
+        {
+          locale,
+          sourceLocale: project.config.sourceLocale,
+          glossary: projectGlossary(project),
+          role: usages ? roleOf(usages.find(target, src)) : undefined,
+        },
+      ).filter((f) => f.code !== "plural-missing-category" && f.code !== "plural-extra-category"),
       ...checkPluralForms(target, locale, message),
     ];
     const errors = findings.filter((f) => f.severity === "error");

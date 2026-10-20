@@ -1,0 +1,37 @@
+{
+  "@@locale": "en",
+  "appTitle": "Tasks",
+  "@appTitle": { "description": "App name, shown in the title bar" },
+  "greeting": "Good morning, {name}",
+  "@greeting": {
+    "description": "Greeting at the top of the task list",
+    "placeholders": { "name": { "type": "String", "example": "Asha" } }
+  },
+  "newTaskHint": "What needs doing?",
+  "@newTaskHint": { "description": "Hint in the text field for a new task" },
+  "addTask": "Add",
+  "@addTask": { "description": "Button that adds the typed task to the list" },
+  "deleteTask": "Delete task",
+  "@deleteTask": { "description": "Tooltip on the button that deletes a task" },
+  "clearFinished": "Clear finished",
+  "@clearFinished": { "description": "Button that removes every finished task from the list" },
+  "emptyState": "You''re all caught up. Enjoy your day!",
+  "@emptyState": { "description": "Shown instead of the list when there are no tasks" },
+  "tasksLeft": "{count, plural, =0{All done} =1{1 task left} other{{count} tasks left}}",
+  "@tasksLeft": {
+    "description": "How many tasks are not finished yet",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "finishedBy": "{gender, select, female{She finished a task} male{He finished a task} other{They finished a task}}",
+  "@finishedBy": {
+    "description": "Activity entry when a teammate finishes a task",
+    "placeholders": { "gender": { "type": "String" } }
+  },
+  "lastSynced": "Last synced {date}",
+  "@lastSynced": {
+    "description": "When the tasks were last saved to the cloud",
+    "placeholders": { "date": { "type": "DateTime", "format": "yMMMd" } }
+  },
+  "syncReminder": "Don''t forget to sync before you go offline",
+  "@syncReminder": { "description": "Banner shown when tasks haven't been synced today" }
+}

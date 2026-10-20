@@ -246,14 +246,18 @@ export function printPlan(p: Plan): void {
     }
     if (p.keepAsWritten.length) console.log(`  Kept as written: ${p.keepAsWritten.join(", ")}`);
     if (!p.brief)
-      console.log(dim("  No brief yet (.localship/brief.md); the README gives context."));
+      console.log(
+        dim("  No brief yet (.localship/brief.md); translators go by comments and the code."),
+      );
   }
   console.log();
   const codes = p.locales.map((l) => l.code).join(",");
   console.log(
     p.ready
       ? green(
-          `Ready. Ask your agent to translate, or run \`localship start ${codes} --model …\` to translate here.`,
+          p.configured
+            ? `Ready. An agent translates with next-batch and submit. Without one, \`localship translate --model …\` uses a model API (billed per use).`
+            : `Ready. An agent sets up with \`localship start ${codes}\`, then translates with next-batch and submit. Without one, \`localship start ${codes} --model …\` translates through a model API (billed per use).`,
         )
       : yellow("Sort out the item above first."),
   );

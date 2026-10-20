@@ -26,8 +26,8 @@ code), ask once, together with the languages if those are missing too.
 ## Tools
 
 Use the `localship_*` MCP tools when available. Otherwise the CLI: `localship plan`,
-`localship start`, `localship next-batch`, `localship submit` (install once with
-`npm install -g localship` if it's missing).
+`localship start`, `localship next-batch`, `localship submit`, from the project folder or with
+`-C <folder>` (install once with `npm install -g localship` if it's missing).
 
 ## 1. Look
 

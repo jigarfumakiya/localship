@@ -1,0 +1,342 @@
+{
+  "targets": {
+    "arb": {
+      "ar": {
+        "addTask": {
+          "model": "claude-opus-5-5",
+          "source": "1570aa937fad89fb",
+          "sourceText": "Add",
+          "state": "draft",
+          "target": "a5c96995e0a5ee69"
+        },
+        "appTitle": {
+          "model": "claude-opus-5-5",
+          "source": "343886fa82a10a98",
+          "sourceText": "Tasks",
+          "state": "draft",
+          "target": "bb518e93be4eb571"
+        },
+        "clearFinished": {
+          "model": "claude-opus-5-5",
+          "source": "16dd710ead31d4b5",
+          "sourceText": "Clear finished",
+          "state": "draft",
+          "target": "834c91e76ea3944b"
+        },
+        "deleteTask": {
+          "model": "claude-opus-5-5",
+          "source": "d7673efa7dcbe106",
+          "sourceText": "Delete task",
+          "state": "draft",
+          "target": "5415979dc408f8f8"
+        },
+        "emptyState": {
+          "model": "claude-opus-5-5",
+          "source": "74ffcac750396b69",
+          "sourceText": "You''re all caught up. Enjoy your day!",
+          "state": "draft",
+          "target": "81f5f0c5d81ce72d"
+        },
+        "finishedBy": {
+          "model": "claude-opus-5-5",
+          "note": "other: passive 'a task was finished', to stay gender-neutral.",
+          "source": "3155221bfb380c7a",
+          "sourceText": "{gender, select, female{She finished a task} male{He finished a task} other{They finished a task}}",
+          "state": "draft",
+          "target": "5f5567e6ed1eae1a"
+        },
+        "greeting": {
+          "model": "claude-opus-5-5",
+          "source": "b62d6f45ef81d970",
+          "sourceText": "Good morning, {name}",
+          "state": "draft",
+          "target": "43634f83e5602909"
+        },
+        "lastSynced": {
+          "model": "claude-opus-5-5",
+          "source": "71b21d1a46439f20",
+          "sourceText": "Last synced {date}",
+          "state": "draft",
+          "target": "32b01f0b83f99e2b"
+        },
+        "newTaskHint": {
+          "model": "claude-opus-5-5",
+          "source": "7f41c45229c93cd9",
+          "sourceText": "What needs doing?",
+          "state": "draft",
+          "target": "a146a9dd53d3e2ec"
+        },
+        "syncReminder": {
+          "model": "claude-opus-5-5",
+          "source": "57b7bb981a5b03b6",
+          "sourceText": "Don''t forget to sync before you go offline",
+          "state": "draft",
+          "target": "7c777e63955b0ab3"
+        },
+        "tasksLeft": {
+          "model": "claude-opus-5-5",
+          "source": "bcd8530e0eeb1ff0",
+          "sourceText": {
+            "one": "1 task left",
+            "other": "{count} tasks left",
+            "zero": "All done"
+          },
+          "state": "draft",
+          "target": "ba108a6eb8c0d52b"
+        }
+      },
+      "fr": {
+        "addTask": {
+          "model": "claude-opus-5-5",
+          "source": "1570aa937fad89fb",
+          "sourceText": "Add",
+          "state": "draft",
+          "target": "30fc4423737b845c"
+        },
+        "appTitle": {
+          "model": "claude-opus-5-5",
+          "source": "343886fa82a10a98",
+          "sourceText": "Tasks",
+          "state": "draft",
+          "target": "71d3826ebeb7b5c2"
+        },
+        "clearFinished": {
+          "model": "claude-opus-5-5",
+          "source": "16dd710ead31d4b5",
+          "sourceText": "Clear finished",
+          "state": "draft",
+          "target": "84fca3449111348e"
+        },
+        "deleteTask": {
+          "model": "claude-opus-5-5",
+          "source": "d7673efa7dcbe106",
+          "sourceText": "Delete task",
+          "state": "draft",
+          "target": "a3b2a0ae7d020a7f"
+        },
+        "emptyState": {
+          "model": "claude-opus-5-5",
+          "source": "74ffcac750396b69",
+          "sourceText": "You''re all caught up. Enjoy your day!",
+          "state": "draft",
+          "target": "6a873121ee771bb5"
+        },
+        "finishedBy": {
+          "model": "claude-opus-5-5",
+          "note": "other: passive 'a task was finished', since French has no common gender-neutral singular pronoun.",
+          "source": "3155221bfb380c7a",
+          "sourceText": "{gender, select, female{She finished a task} male{He finished a task} other{They finished a task}}",
+          "state": "draft",
+          "target": "b54b5ec61819e72c"
+        },
+        "greeting": {
+          "model": "claude-opus-5-5",
+          "source": "b62d6f45ef81d970",
+          "sourceText": "Good morning, {name}",
+          "state": "draft",
+          "target": "a76a56c657ffbb69"
+        },
+        "lastSynced": {
+          "model": "claude-opus-5-5",
+          "source": "71b21d1a46439f20",
+          "sourceText": "Last synced {date}",
+          "state": "draft",
+          "target": "6ce729ac08ab2009"
+        },
+        "newTaskHint": {
+          "model": "claude-opus-5-5",
+          "source": "7f41c45229c93cd9",
+          "sourceText": "What needs doing?",
+          "state": "draft",
+          "target": "b3de038d8582e4d6"
+        },
+        "syncReminder": {
+          "model": "claude-opus-5-5",
+          "source": "57b7bb981a5b03b6",
+          "sourceText": "Don''t forget to sync before you go offline",
+          "state": "draft",
+          "target": "d4a2cd70a9845e9b"
+        },
+        "tasksLeft": {
+          "model": "claude-opus-5-5",
+          "source": "bcd8530e0eeb1ff0",
+          "sourceText": {
+            "one": "1 task left",
+            "other": "{count} tasks left",
+            "zero": "All done"
+          },
+          "state": "draft",
+          "target": "eee31e6cdfff1cf0"
+        }
+      },
+      "hi": {
+        "addTask": {
+          "model": "claude-opus-5-5",
+          "source": "1570aa937fad89fb",
+          "sourceText": "Add",
+          "state": "draft",
+          "target": "322734655084602b"
+        },
+        "appTitle": {
+          "model": "claude-opus-5-5",
+          "source": "343886fa82a10a98",
+          "sourceText": "Tasks",
+          "state": "draft",
+          "target": "fb1c5a844a9c012a"
+        },
+        "clearFinished": {
+          "model": "claude-opus-5-5",
+          "source": "16dd710ead31d4b5",
+          "sourceText": "Clear finished",
+          "state": "draft",
+          "target": "dca7f22a68e42a71"
+        },
+        "deleteTask": {
+          "model": "claude-opus-5-5",
+          "source": "d7673efa7dcbe106",
+          "sourceText": "Delete task",
+          "state": "draft",
+          "target": "fd0bd0982c996979"
+        },
+        "emptyState": {
+          "model": "claude-opus-5-5",
+          "source": "74ffcac750396b69",
+          "sourceText": "You''re all caught up. Enjoy your day!",
+          "state": "draft",
+          "target": "c62cd62ddff50b96"
+        },
+        "finishedBy": {
+          "model": "claude-opus-5-5",
+          "note": "Hindi past tense with ने doesn't mark the subject's gender, so female and male read the same; other uses उन्होंने.",
+          "source": "3155221bfb380c7a",
+          "sourceText": "{gender, select, female{She finished a task} male{He finished a task} other{They finished a task}}",
+          "state": "draft",
+          "target": "8a8b9b6b0676284d"
+        },
+        "greeting": {
+          "model": "claude-opus-5-5",
+          "source": "b62d6f45ef81d970",
+          "sourceText": "Good morning, {name}",
+          "state": "draft",
+          "target": "9e9ee58690ac5acf"
+        },
+        "lastSynced": {
+          "model": "claude-opus-5-5",
+          "source": "71b21d1a46439f20",
+          "sourceText": "Last synced {date}",
+          "state": "draft",
+          "target": "285af0928f0d0b6f"
+        },
+        "newTaskHint": {
+          "model": "claude-opus-5-5",
+          "source": "7f41c45229c93cd9",
+          "sourceText": "What needs doing?",
+          "state": "draft",
+          "target": "cac1a314142117d2"
+        },
+        "syncReminder": {
+          "model": "claude-opus-5-5",
+          "source": "57b7bb981a5b03b6",
+          "sourceText": "Don''t forget to sync before you go offline",
+          "state": "draft",
+          "target": "ecea7ff12c3320ec"
+        },
+        "tasksLeft": {
+          "model": "claude-opus-5-5",
+          "source": "bcd8530e0eeb1ff0",
+          "sourceText": {
+            "one": "1 task left",
+            "other": "{count} tasks left",
+            "zero": "All done"
+          },
+          "state": "draft",
+          "target": "f09686410c8d5ae8"
+        }
+      },
+      "ja": {
+        "addTask": {
+          "model": "claude-opus-5-5",
+          "source": "1570aa937fad89fb",
+          "sourceText": "Add",
+          "state": "draft",
+          "target": "d61b8092026f8d4c"
+        },
+        "appTitle": {
+          "model": "claude-opus-5-5",
+          "source": "343886fa82a10a98",
+          "sourceText": "Tasks",
+          "state": "draft",
+          "target": "2616bb172812df50"
+        },
+        "clearFinished": {
+          "model": "claude-opus-5-5",
+          "source": "16dd710ead31d4b5",
+          "sourceText": "Clear finished",
+          "state": "draft",
+          "target": "584f013aa4dfb892"
+        },
+        "deleteTask": {
+          "model": "claude-opus-5-5",
+          "source": "d7673efa7dcbe106",
+          "sourceText": "Delete task",
+          "state": "draft",
+          "target": "24bbb5d756642a0f"
+        },
+        "emptyState": {
+          "model": "claude-opus-5-5",
+          "source": "74ffcac750396b69",
+          "sourceText": "You''re all caught up. Enjoy your day!",
+          "state": "draft",
+          "target": "9729b35eb7f2a602"
+        },
+        "finishedBy": {
+          "model": "claude-opus-5-5",
+          "source": "3155221bfb380c7a",
+          "sourceText": "{gender, select, female{She finished a task} male{He finished a task} other{They finished a task}}",
+          "state": "draft",
+          "target": "22536b3b2638ebb0"
+        },
+        "greeting": {
+          "model": "claude-opus-5-5",
+          "source": "b62d6f45ef81d970",
+          "sourceText": "Good morning, {name}",
+          "state": "draft",
+          "target": "2ef89f975842636d"
+        },
+        "lastSynced": {
+          "model": "claude-opus-5-5",
+          "source": "71b21d1a46439f20",
+          "sourceText": "Last synced {date}",
+          "state": "draft",
+          "target": "f01b3a2fd6835dce"
+        },
+        "newTaskHint": {
+          "model": "claude-opus-5-5",
+          "source": "7f41c45229c93cd9",
+          "sourceText": "What needs doing?",
+          "state": "draft",
+          "target": "a12750b0d91859a9"
+        },
+        "syncReminder": {
+          "model": "claude-opus-5-5",
+          "source": "57b7bb981a5b03b6",
+          "sourceText": "Don''t forget to sync before you go offline",
+          "state": "draft",
+          "target": "dd4966646abdd4fc"
+        },
+        "tasksLeft": {
+          "model": "claude-opus-5-5",
+          "source": "bcd8530e0eeb1ff0",
+          "sourceText": {
+            "one": "1 task left",
+            "other": "{count} tasks left",
+            "zero": "All done"
+          },
+          "state": "draft",
+          "target": "daa78a6caed78387"
+        }
+      }
+    }
+  },
+  "version": 1
+}

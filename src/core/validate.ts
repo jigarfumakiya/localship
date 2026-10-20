@@ -151,12 +151,20 @@ export function validateProject(project: Project, opts: ValidateOptions = {}): I
           }
         }
         issues.push(
-          ...checkTranslation(loaded, spec, src, tgt, {
-            locale,
-            sourceLocale: project.config.sourceLocale,
-            glossary: projectGlossary(project),
-            role: opts.usages ? roleOf(opts.usages.find(loaded, src)) : undefined,
-          }).map((i) => ({ ...where, ...i })),
+          ...checkTranslation(
+            loaded,
+            tgt.message.kind === "plural"
+              ? loaded.pluralSpec(locale, { forms: Object.keys(tgt.message.forms), source: src })
+              : spec,
+            src,
+            tgt,
+            {
+              locale,
+              sourceLocale: project.config.sourceLocale,
+              glossary: projectGlossary(project),
+              role: opts.usages ? roleOf(opts.usages.find(loaded, src)) : undefined,
+            },
+          ).map((i) => ({ ...where, ...i })),
         );
       }
     }

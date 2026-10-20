@@ -1,0 +1,12 @@
+# localship configuration, written by `localship init`.
+# Docs: https://github.com/jigarfumakiya/localship/blob/main/docs/reference.md#configuration
+
+sourceLocale: en
+locales:
+  - ar
+  - fr
+  - hi
+  - ja
+targets:
+  - format: arb
+    path: lib/l10n/app_{locale}.arb

@@ -1,0 +1,14 @@
+{
+  "@@locale": "hi",
+  "appTitle": "कार्य",
+  "greeting": "सुप्रभात, {name}",
+  "newTaskHint": "क्या करना है?",
+  "addTask": "जोड़ें",
+  "deleteTask": "कार्य हटाएं",
+  "clearFinished": "पूरे कार्य हटाएं",
+  "emptyState": "आपके सभी कार्य पूरे हो गए। अपने दिन का आनंद लें!",
+  "tasksLeft": "{count, plural, zero{सब पूरा हो गया} one{1 कार्य बाकी है} other{{count} कार्य बाकी हैं}}",
+  "finishedBy": "{gender, select, female{उसने एक कार्य पूरा किया} male{उसने एक कार्य पूरा किया} other{उन्होंने एक कार्य पूरा किया}}",
+  "lastSynced": "आखिरी सिंक: {date}",
+  "syncReminder": "ऑफ़लाइन होने से पहले सिंक करना न भूलें"
+}

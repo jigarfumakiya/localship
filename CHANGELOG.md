@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- `examples/flutter-app`: a small Flutter app translated into Arabic, French, Hindi and Japanese
+  by a coding agent with Localship, with Flutter tests that hold for any correct translation.
+  `scripts/flutter-e2e.sh` (and a CI job) runs Localship's checks, `flutter gen-l10n` (failing on
+  any warning), `flutter analyze` and the tests.
+- From an agent's end-to-end run: the batch tells translators when a Flutter project uses
+  `use-escaping`, and that `zero`/`one`/`two` are the same slots as `=0`/`=1`/`=2`; the translate
+  skill covers ICU `select` messages; the setup skill no longer calls ARB and JSON unsupported.
+  A translation that shows the count where the source wrote the number ("{count} tâche" for
+  "1 task") no longer gets a missing-number warning. In Flutter, a message that fills `zero`
+  (or `one`, `two`) takes exactly 0 (1, 2) from the other forms, as `intl` does, so French
+  `one{1 tâche}` is accepted when `zero` is there, and batches show each form's real counts. `submit` with a missing file says so in one
+  line, `plan` no longer mentions a README that may not exist, and `start` says it takes
+  `ar fr` or `ar,fr`.
 - Flutter ARB follows gen-l10n: `=0`/`=1`/`=2` are read as `zero`/`one`/`two` (one slot in
   Flutter), so Arabic is no longer asked for both; `zero`, `one` and `two` are optional in any
   language, as `intl` uses them for exactly 0, 1 and 2. `#` is text in Flutter, so a form using it
