@@ -126,10 +126,8 @@ describe("detect", () => {
       "/r/App/Localizable.xcstrings": catalog("de", ["Hallo", "Tschüss"]),
       "/r/generated/Other.xcstrings": catalog("en", ["x"]),
       "/r/App/en.lproj/InfoPlist.strings": '"CFBundleName" = "App";',
-      "/r/lib/l10n/app_en.arb": "{}",
-      "/r/web/locales/en.json": "{}",
-      "/r/web/locales/fr.json": "{}",
-      "/r/web/data/en.json": "{}",
+      "/r/config/locales/de.yml": "de:\n  hi: Hallo\n",
+      "/r/config/locales/en.yml": "en:\n  hi: Hi\n",
     });
     const r = await detect(fs, "/r");
     expect(r.candidates.map((c) => c.target.path)).toEqual(["App/Localizable.xcstrings"]);
@@ -140,9 +138,47 @@ describe("detect", () => {
     });
     expect(r.unsupported).toEqual([
       { format: "Apple .strings", files: 1, examples: ["App/en.lproj/InfoPlist.strings"] },
-      { format: "Flutter ARB", files: 1, examples: ["lib/l10n/app_en.arb"] },
-      { format: "JSON", files: 2, examples: ["web/locales/en.json", "web/locales/fr.json"] },
+      {
+        format: "YAML (Rails)",
+        files: 2,
+        examples: ["config/locales/de.yml", "config/locales/en.yml"],
+      },
     ]);
+  });
+
+  it("finds Flutter ARB files, taking the source language from l10n.yaml", async () => {
+    const fs = memoryFs({
+      "/r/l10n.yaml": "arb-dir: lib/l10n\ntemplate-arb-file: app_de.arb\n",
+      "/r/lib/l10n/app_de.arb": '{"hello": "Hallo", "bye": "Tschüss"}',
+      "/r/lib/l10n/app_pt_BR.arb": '{"hello": "Olá"}',
+    });
+    const r = await detect(fs, "/r");
+    expect(r.candidates).toHaveLength(1);
+    expect(r.candidates[0]).toMatchObject({
+      target: { format: "arb", path: "lib/l10n/app_{locale}.arb" },
+      confidence: "high",
+      strings: 2,
+      locales: ["pt-BR"],
+      sourceLocale: "de",
+    });
+    expect(r.unsupported).toEqual([]);
+  });
+
+  it("finds JSON translation files, flat or by folder, and tells i18next from ICU", async () => {
+    const fs = memoryFs({
+      "/r/web/locales/en.json": '{"hi": "Hi {{name}}"}',
+      "/r/web/locales/fr.json": '{"hi": "Salut {{name}}"}',
+      "/r/app/messages/en/common.json":
+        '{"items": "{count, plural, one {# item} other {# items}}"}',
+      "/r/app/messages/de/common.json": "{}",
+      "/r/web/data/en.json": '{"not": "translations"}',
+    });
+    const r = await detect(fs, "/r");
+    expect(r.candidates.map((c) => c.target)).toEqual([
+      { format: "json", path: "app/messages/{locale}/common.json", placeholders: "icu" },
+      { format: "json", path: "web/locales/{locale}.json" },
+    ]);
+    expect(r.candidates.map((c) => c.locales)).toEqual([["de"], ["fr"]]);
   });
 
   it("suggests adding a String Catalog to an Xcode project that has none", async () => {
@@ -257,9 +293,12 @@ describe("init", () => {
   });
 
   it("explains what to do when nothing is found", async () => {
-    const fs = memoryFs({ "/r/App.xcodeproj/project.pbxproj": "", "/r/lib/l10n/app_en.arb": "{}" });
+    const fs = memoryFs({
+      "/r/App.xcodeproj/project.pbxproj": "",
+      "/r/App/Strings.resx": "<root/>",
+    });
     const none = io();
     expect(await runInit(fs, { cwd: "/r", yes: true }, none)).toBe(1);
-    expect(none.err[0]).toMatch(/String Catalog[\s\S]*Flutter ARB/);
+    expect(none.err[0]).toMatch(/String Catalog[\s\S]*\.resx/);
   });
 });

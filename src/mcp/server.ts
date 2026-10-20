@@ -51,7 +51,7 @@ export function createServer(opts: ServerOptions): McpServer {
     { name: "localship", version: opts.version },
     {
       instructions:
-        "Localization for app projects (Android XML, gettext PO, Apple String Catalogs). Do what the user asked and nothing more. For a request to translate, add a language or update translations: localship_plan to see what's there, localship_start if the languages aren't set up, then localship_next_batch → localship_submit until nothing remains, then localship_validate, and report. Go by what the user means, however it's worded: wanting the app in a language ('localize the app', 'I want this in Spanish') includes moving text still in the code into string resources first (the plan's notes); keeping translations up to date doesn't; a limit they state wins. If no language was named, ask once before starting. Otherwise stop only for blockers or warnings. Don't create branches, write context files or commit unless asked. For status questions use localship_status, or localship_detect when there's no config. Never edit translation files by hand when these tools can do it.",
+        "Localization for app projects (Android XML, gettext PO, Apple String Catalogs, Flutter ARB, JSON). Do what the user asked and nothing more. For a request to translate, add a language or update translations: localship_plan to see what's there, localship_start if the languages aren't set up, then localship_next_batch → localship_submit until nothing remains, then localship_validate, and report. Go by what the user means, however it's worded: wanting the app in a language ('localize the app', 'I want this in Spanish') includes moving text still in the code into string resources first (the plan's notes); keeping translations up to date doesn't; a limit they state wins. If no language was named, ask once before starting. Otherwise stop only for blockers or warnings. Don't create branches, write context files or commit unless asked. For status questions use localship_status, or localship_detect when there's no config. Never edit translation files by hand when these tools can do it.",
     },
   );
   const dir = (cwd?: string) => path.resolve(opts.cwd, cwd ?? ".");
@@ -157,7 +157,7 @@ export function createServer(opts: ServerOptions): McpServer {
 
   tool(
     "localship_detect",
-    "Find translation files in a repo (Android res folders, .po files, String Catalogs) without writing anything.",
+    "Find translation files in a repo (Android res folders, .po files, String Catalogs, ARB and JSON files) without writing anything.",
     { cwd: cwdArg },
     async ({ cwd }) => detect(fs, dir(cwd)),
     { readOnlyHint: true },

@@ -2,7 +2,7 @@
   "name": "localship",
   "displayName": "Localship",
   "version": "0.3.0",
-  "description": "Translate Android, gettext and Apple String Catalog apps with your own model: skills to set up, translate and review, and an MCP server that checks every translation.",
+  "description": "Translate Android, Apple String Catalog, gettext, Flutter ARB and JSON apps with your own model: skills to set up, translate and review, and an MCP server that checks every translation.",
   "author": {
     "name": "Jigar Fumakiya",
     "url": "https://github.com/jigarfumakiya"

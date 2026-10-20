@@ -275,11 +275,15 @@ Every target has a `format` and a `path`, plus an optional `id` (needed when two
 | `android-xml` | The `res` directory | none |
 | `po` | Pattern with `{locale}`, e.g. `po/{locale}.po` | `template` (a `.pot`), `placeholders` (syntax for entries with no format flag), `pluralForms` (per-locale `Plural-Forms` when a file has none) |
 | `xcstrings` | The `.xcstrings` file | none |
+| `arb` | Pattern with `{locale}`, e.g. `lib/l10n/app_{locale}.arb` | none |
+| `json` | Pattern with `{locale}`, e.g. `locales/{locale}.json` | `placeholders`: `i18next` (default) or `icu`, or any `po` syntax |
 
 ## Detection
 
 - **What it finds:** Android `res` folders with strings, groups of `.po` files sharing a path
-  pattern (with their `.pot` template), and `.xcstrings` catalogs.
+  pattern (with their `.pot` template), `.xcstrings` catalogs, Flutter `.arb` files (the source
+  language from `l10n.yaml`'s `template-arb-file`), and JSON files in a translations folder
+  (`locales/`, `i18n/`, `messages/`…), telling i18next from ICU by their placeholders.
 - **Real counts:** each candidate is loaded with the same reader `status` uses, so its string
   count and languages are real.
 - **Confidence:** each candidate is `high`, `medium` (for example a build-variant folder, or a
@@ -288,7 +292,7 @@ Every target has a `format` and a `path`, plus an optional `id` (needed when two
   path new `.po` files will get, following the ecosystem's layout (Django `locale/{locale}/LC_MESSAGES/`,
   WordPress `languages/<domain>-{locale}.po`, otherwise `po/{locale}.po`). An empty String Catalog
   is offered with a reminder to build in Xcode first.
-- **Unsupported formats:** files it recognizes but can't read yet (`.strings`, ARB, JSON, YAML,
+- **Unsupported formats:** files it recognizes but can't read yet (`.strings`, YAML,
   `.resx`, `.properties`, XLIFF) are listed, so nothing is ignored silently.
 - **Hints:** an Xcode project without a String Catalog gets told how to add one.
 - **In agents and CI:** without a terminal, `init` writes only with `--yes` or `--accept`. An
@@ -316,8 +320,8 @@ translation.
 | Android `res/values*/strings.xml` | ✅ Supported |
 | gettext `.po` / `.pot` | ✅ Supported |
 | Apple String Catalog `.xcstrings` | ✅ Strings and simple plurals (advanced variants/substitutions block strict checks) |
-| JSON (flat, nested, i18next, ICU) | Planned |
-| Flutter ARB | Planned |
+| Flutter ARB `.arb` | ✅ Strings, ICU plurals; `select` and other ICU messages are translated whole |
+| JSON (flat, nested, i18next, ICU) | ✅ Strings, arrays, i18next and ICU plurals |
 | Apple `.strings` / `.stringsdict` | Planned |
 
 ### Android
@@ -355,6 +359,33 @@ translation.
 - **Writing:** untouched parts are written back byte for byte. Changed parts use the file's own
   style. For Xcode files that means 2-space indent, `" : "`, sorted keys, blank-line empty
   objects and no final newline, so Xcode reopens the file without a diff.
+
+### Flutter ARB
+
+- **Files:** `path: lib/l10n/app_{locale}.arb`. The source language's file is the template.
+  New files are named the Flutter way (`app_pt_BR.arb`) and start with `@@locale`.
+- **Context:** the template's `@key` description and placeholder types and examples become the
+  comment translators see. Translation files get only the messages, not the metadata.
+- **ICU:** a message that is exactly one `{count, plural, …}` becomes plural forms, so every
+  form the language needs is asked for and checked. `=0` and `=1` are optional in any language.
+  Messages with text around a plural, `select` or nested plurals are translated whole, with
+  their arguments checked and braces required to balance (`icu-malformed`). Apostrophe quoting
+  isn't modeled.
+
+### JSON
+
+- **Files:** `path: locales/{locale}.json` or `public/locales/{locale}/common.json` (one target
+  per namespace). Locales in paths may be `pt-BR` or `pt_BR`; new files follow the existing ones.
+- **Keys:** nested objects become dotted keys (`nav.home`); flat files with dotted keys work too.
+  Arrays of strings are arrays; numbers, booleans and `null` are left alone.
+- **`placeholders: i18next`** (default): `{{name}}`, and plurals as sibling keys `items_one`,
+  `items_other`, with `_zero` optional in any language. Ordinal plurals (`_ordinal_one`) are
+  plain strings.
+- **`placeholders: icu`** (format.js, next-intl, vue-i18n with ICU): `{name}`, and plurals as
+  `{count, plural, …}` like ARB, where `#` and `{count}` are the same argument.
+- **Writing:** new keys go where the source has them and plural forms stay together in CLDR
+  order. Removing the last key of an object removes the object. Untouched parts keep their text;
+  changed objects use the file's indent.
 
 ## Checks
 

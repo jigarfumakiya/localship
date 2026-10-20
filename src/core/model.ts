@@ -105,9 +105,10 @@ export interface PluralFormSpec {
   decimalOnly?: boolean;
 }
 
-/** Plural form keys in their natural order: CLDR order, then numeric. */
+/** Plural form keys in their natural order: ICU exact counts (`=0`), CLDR order, then numeric. */
 export function sortPluralKeys(keys: string[]): string[] {
   const rank = (k: string) => {
+    if (k.startsWith("=")) return -100 + Number(k.slice(1));
     const c = PLURAL_CATEGORIES.indexOf(k as PluralCategory);
     return c >= 0 ? c : 100 + Number(k);
   };

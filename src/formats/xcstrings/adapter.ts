@@ -3,7 +3,6 @@ import type { Catalog, Entry, Issue, Message } from "../../core/model.js";
 import { relativePath } from "../../core/paths.js";
 import { findPlaceholders } from "../../core/placeholders.js";
 import { cldrPluralSpec } from "../../core/plurals.js";
-import type { FormatAdapter, Target, WriteResult } from "../types.js";
 import {
   child,
   deletePath,
@@ -12,12 +11,14 @@ import {
   type JObject,
   JsonError,
   type JsonStyle,
+  lineIndex,
   parseJson,
   setPath,
   stringifyJson,
   toJs,
   XCODE_STYLE,
-} from "./json.js";
+} from "../json-tree.js";
+import type { FormatAdapter, Target, WriteResult } from "../types.js";
 
 export interface XcstringsTarget {
   id?: string;
@@ -123,18 +124,7 @@ export const xcstringsAdapter: FormatAdapter<XcstringsTarget> = {
       return target;
     }
 
-    const lineStarts = [0];
-    for (let i = 0; i < text.length; i++) if (text.charCodeAt(i) === 10) lineStarts.push(i + 1);
-    const lineOf = (offset = 0) => {
-      let lo = 0;
-      let hi = lineStarts.length - 1;
-      while (lo < hi) {
-        const mid = (lo + hi + 1) >> 1;
-        if ((lineStarts[mid] as number) <= offset) lo = mid;
-        else hi = mid - 1;
-      }
-      return lo + 1;
-    };
+    const lineOf = lineIndex(text);
 
     const fileSource = toJs(child(doc, "sourceLanguage"));
     const sourceLanguage = typeof fileSource === "string" ? fileSource : sourceLocale;

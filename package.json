@@ -1,7 +1,7 @@
 {
   "name": "localship",
   "version": "0.3.0",
-  "description": "Translate your app with the AI you already use. An MCP server, agent skills and CLI that check every translation before it's written. Android, Apple String Catalogs and gettext.",
+  "description": "Translate your app with the AI you already use. An MCP server, agent skills and CLI that check every translation before it's written. Android, Apple String Catalogs, gettext, Flutter ARB and JSON.",
   "keywords": [
     "localization",
     "l10n",
@@ -12,6 +12,9 @@
     "xcstrings",
     "string-catalog",
     "gettext",
+    "flutter",
+    "arb",
+    "i18next",
     "mcp",
     "mcp-server",
     "claude-code",

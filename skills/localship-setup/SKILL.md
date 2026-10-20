@@ -6,7 +6,7 @@ description: Set up localization for an app repo with Localship — whether it a
 # Set up localization with Localship
 
 Localship keeps translations in the repo's own files (Android `res/values-*/strings.xml`,
-gettext `.po`, Apple `.xcstrings`) and checks every translation in code. You do the parts
+gettext `.po`, Apple `.xcstrings`, Flutter `.arb`, JSON) and checks every translation in code. You do the parts
 that need judgment: choosing what to set up, and writing the context translators use.
 
 > For a direct request ("translate this app to Hindi"), start with the `localship` skill instead:

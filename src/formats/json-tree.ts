@@ -215,13 +215,14 @@ export function child(node: JNode | undefined, key: string): JNode | undefined {
 
 /**
  * Sets `value` at `path`, creating objects on the way, and marks every object on the path as
- * changed. New keys go where `order` puts them, so sorted files stay sorted.
+ * changed. New keys go where `order` puts them among their siblings (under `parent`), so sorted
+ * files stay sorted.
  */
 export function setPath(
   root: JObject,
   path: string[],
   value: JNode,
-  order: (a: string, b: string) => number,
+  order: (a: string, b: string, parent: string[]) => number,
 ): void {
   let node: JObject = root;
   for (let d = 0; d < path.length; d++) {
@@ -231,7 +232,8 @@ export function setPath(
     let entry = node.entries.find((e) => e.key === key);
     if (!entry) {
       entry = { key, value: last ? value : { kind: "object", entries: [] } };
-      const at = node.entries.findIndex((e) => order(e.key, key) > 0);
+      const parent = path.slice(0, d);
+      const at = node.entries.findIndex((e) => order(e.key, key, parent) > 0);
       if (at < 0) node.entries.push(entry);
       else node.entries.splice(at, 0, entry);
     } else if (last) {
@@ -257,4 +259,20 @@ export function deletePath(root: JObject, path: string[]): boolean {
   parent.entries.splice(at, 1);
   for (const node of chain) node.raw = undefined;
   return true;
+}
+
+/** Line number (1-based) of an offset in `text`. */
+export function lineIndex(text: string): (offset?: number) => number {
+  const starts = [0];
+  for (let i = 0; i < text.length; i++) if (text.charCodeAt(i) === 10) starts.push(i + 1);
+  return (offset = 0) => {
+    let lo = 0;
+    let hi = starts.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if ((starts[mid] as number) <= offset) lo = mid;
+      else hi = mid - 1;
+    }
+    return lo + 1;
+  };
 }

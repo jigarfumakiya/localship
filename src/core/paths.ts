@@ -5,13 +5,14 @@ import type { FileSystem } from "./fs.js";
  * How a format spells locales in file and folder names.
  * - bcp47: `pt-BR`, `sr-Latn`
  * - gettext: `pt_BR`, `sr@latin`
+ * - underscore: `pt_BR`, `zh_Hant` (Flutter)
  */
 /** `abs` relative to `root` with forward slashes on every OS, as reports and the lockfile show it. */
 export function relativePath(root: string, abs: string): string {
   return path.relative(root, abs).split(path.sep).join("/");
 }
 
-export type LocaleStyle = "bcp47" | "gettext";
+export type LocaleStyle = "bcp47" | "gettext" | "underscore";
 
 const LANGUAGE_NAMES = new Intl.DisplayNames(["en"], { type: "language", fallback: "none" });
 const GETTEXT_SCRIPTS: Record<string, string> = { latin: "Latn", cyrillic: "Cyrl" };
@@ -46,6 +47,8 @@ export function parseLocaleSegment(segment: string): string | undefined {
 /** Writes a canonical locale in a path style. */
 export function formatLocaleSegment(locale: string, style: LocaleStyle): string {
   if (style === "bcp47") return locale;
+  // Flutter and Java: pt_BR, zh_Hant, sr_Latn_RS.
+  if (style === "underscore") return locale.replace(/-/g, "_");
   const parts = locale.split("-");
   const lang = parts[0] ?? locale;
   const script = parts.find((p) => p.length === 4);
