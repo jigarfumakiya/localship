@@ -60,6 +60,26 @@ const XcstringsTargetSchema = z.strictObject({
     ),
 });
 
+const localePattern = z
+  .string()
+  .refine((p) => p.includes("{locale}"), "Must contain {locale}, e.g. locales/{locale}.json");
+
+const ArbTargetSchema = z.strictObject({
+  id,
+  format: z.literal("arb"),
+  path: localePattern.refine(
+    (p) => p.endsWith(".arb"),
+    "Point at .arb files, e.g. lib/l10n/app_{locale}.arb",
+  ),
+});
+
+const JsonTargetSchema = z.strictObject({
+  id,
+  format: z.literal("json"),
+  path: localePattern,
+  placeholders: z.enum(PLACEHOLDER_SYNTAXES).optional(),
+});
+
 export const ConfigSchema = z
   .strictObject({
     sourceLocale: locale.default("en"),
@@ -70,6 +90,8 @@ export const ConfigSchema = z
           AndroidTargetSchema,
           PoTargetSchema,
           XcstringsTargetSchema,
+          ArbTargetSchema,
+          JsonTargetSchema,
         ]),
       )
       .min(1, "Add at least one target"),

@@ -58,6 +58,8 @@ export async function detect(fs: FileSystem, root: string): Promise<DetectResult
     ...(await detectAndroid(fs, root, files)),
     ...(await detectPo(fs, root, files)),
     ...(await detectXcstrings(fs, root, files)),
+    ...(await detectArb(fs, root, files)),
+    ...(await detectJson(fs, root, files)),
   ];
   const hardcoded = await estimateHardcoded(fs, root, files);
   const otherSystems = await findOtherSystems(fs, root, files);
@@ -69,9 +71,16 @@ export async function detect(fs: FileSystem, root: string): Promise<DetectResult
   const declared = [
     ...new Set(candidates.flatMap((c) => (c.sourceLocale ? [c.sourceLocale] : []))),
   ];
+  const where = [
+    ...new Set(
+      candidates.flatMap((c) =>
+        c.sourceLocale ? [c.target.format === "arb" ? "l10n.yaml" : "the String Catalog"] : [],
+      ),
+    ),
+  ].join(" and ");
   const sourceLocale =
     declared.length === 1
-      ? { value: declared[0] as string, confident: true, reason: "declared in the String Catalog" }
+      ? { value: declared[0] as string, confident: true, reason: `declared in ${where}` }
       : declared.length > 1
         ? {
             value: declared[0] as string,
@@ -326,6 +335,121 @@ async function detectXcstrings(
   return out;
 }
 
+// ── Flutter ARB and JSON ─────────────────────────────────────────────────────
+
+/** `lib/l10n/app_en.arb`, `app_pt_BR.arb` → `lib/l10n/app_{locale}.arb`, by folder. */
+async function detectArb(fs: FileSystem, root: string, files: string[]): Promise<Candidate[]> {
+  const byDir = new Map<string, string[]>();
+  for (const f of files.filter((x) => x.endsWith(".arb"))) {
+    const dir = path.posix.dirname(f);
+    byDir.set(dir, [...(byDir.get(dir) ?? []), path.posix.basename(f, ".arb")]);
+  }
+  // Flutter's l10n.yaml names the template, whose locale is the source language.
+  const l10n = files.find((f) => /(^|\/)l10n\.yaml$/.test(f));
+  let template: string | undefined;
+  if (l10n) {
+    const text = await fs.readFile(path.join(root, l10n)).catch(() => "");
+    template = /^template-arb-file:\s*["']?([^"'\s#]+)/m.exec(text)?.[1];
+  }
+  const out: Candidate[] = [];
+  for (const [dir, stems] of byDir) {
+    // The shared prefix, cut back to an underscore so `app_en` and `app_es` give `app_`.
+    let prefix = stems.reduce((a, b) => {
+      let i = 0;
+      while (i < a.length && a[i] === b[i]) i++;
+      return a.slice(0, i);
+    });
+    if (
+      stems.length === 1 ||
+      parseLocaleSegment(stems[0]?.slice(prefix.length) ?? "") === undefined
+    )
+      prefix = prefix.slice(0, prefix.lastIndexOf("_") + 1);
+    const found = stems.flatMap((s) => {
+      const locale = parseLocaleSegment(s.slice(prefix.length));
+      return locale ? [locale] : [];
+    });
+    if (!found.length) continue;
+    const pattern = `${dir === "." ? "" : `${dir}/`}${prefix}${LOCALE_TOKEN}.arb`;
+    const declared = template
+      ? parseLocaleSegment(path.posix.basename(template, ".arb").slice(prefix.length))
+      : undefined;
+    out.push(
+      await jsonCandidate(fs, root, { format: "arb", path: pattern }, found, declared, [
+        `Flutter ARB files (${found.length})${declared ? `; ${template} is the template` : ""}`,
+      ]),
+    );
+  }
+  return out;
+}
+
+/** `locales/en.json` or `locales/en/common.json` in a translations folder, by path pattern. */
+async function detectJson(fs: FileSystem, root: string, files: string[]): Promise<Candidate[]> {
+  const patterns = new Map<string, string[]>();
+  for (const f of files) {
+    if (!f.endsWith(".json")) continue;
+    const parts = f.split("/");
+    if (!parts.slice(0, -1).some((p) => I18N_DIR.test(p))) continue;
+    const stem = path.posix.basename(f, ".json");
+    let pattern: string | undefined;
+    let locale = parseLocaleSegment(stem);
+    if (locale) {
+      pattern = [...parts.slice(0, -1), `${LOCALE_TOKEN}.json`].join("/");
+    } else {
+      const at = parts.findLastIndex((p, i) => i < parts.length - 1 && parseLocaleSegment(p));
+      if (at >= 0) {
+        locale = parseLocaleSegment(parts[at] as string);
+        pattern = parts.map((p, i) => (i === at ? LOCALE_TOKEN : p)).join("/");
+      }
+    }
+    if (pattern && locale) patterns.set(pattern, [...(patterns.get(pattern) ?? []), locale]);
+  }
+  const out: Candidate[] = [];
+  for (const [pattern, found] of patterns) {
+    const source = found.includes("en") ? "en" : (found[0] as string);
+    const sample = await fs
+      .readFile(path.join(root, pattern.replace(LOCALE_TOKEN, source)))
+      .catch(() => "");
+    // {{name}} is i18next; {name} and {n, plural, …} are ICU (format.js, next-intl).
+    const icu = !/\{\{/.test(sample) && /\{\s*[A-Za-z_]\w*\s*(,\s*(plural|select)|\})/.test(sample);
+    const target: TargetConfig = {
+      format: "json",
+      path: pattern,
+      ...(icu ? { placeholders: "icu" as const } : {}),
+    };
+    out.push(
+      await jsonCandidate(fs, root, target, found, undefined, [
+        `JSON translation files (${found.length}), ${icu ? "ICU messages" : "i18next style"}`,
+      ]),
+    );
+  }
+  return out;
+}
+
+async function jsonCandidate(
+  fs: FileSystem,
+  root: string,
+  target: TargetConfig,
+  found: string[],
+  declared: string | undefined,
+  evidence: string[],
+): Promise<Candidate> {
+  const source = declared ?? (found.includes("en") ? "en" : (found[0] as string));
+  const t = await openTarget(fs, root, target, source, target.format);
+  const error = t.issues.find((i) => i.severity === "error");
+  const strings = [...t.source.entries.values()].filter((e) => e.translatable).length;
+  return {
+    target,
+    confidence: error ? "low" : strings === 0 || found.length === 1 ? "medium" : "high",
+    evidence: error
+      ? [...evidence, `${error.file ?? target.path} could not be read: ${error.message}`]
+      : [...evidence, `${strings} string${strings === 1 ? "" : "s"} in ${source}`],
+    strings,
+    locales: [...t.locales.keys()].sort(),
+    ...(declared ? { sourceLocale: declared } : {}),
+    questions: error ? ["Fix the file, or leave it out"] : [],
+  };
+}
+
 // ── Hints ────────────────────────────────────────────────────────────────────
 
 /** More text in the code than in the resources means the app isn't localizable yet. */
@@ -418,8 +542,6 @@ function detectUnsupported(files: string[]): UnsupportedFind[] {
       parts.slice(0, -1).some((p) => parseLocaleSegment(p) !== undefined);
     if (ext === ".strings" && parts.some((p) => p.endsWith(".lproj"))) add("Apple .strings", f);
     else if (ext === ".stringsdict") add("Apple .stringsdict", f);
-    else if (ext === ".arb") add("Flutter ARB", f);
-    else if (ext === ".json" && inI18nDir && localeNamed) add("JSON", f);
     else if ((ext === ".yml" || ext === ".yaml") && inI18nDir && localeNamed)
       add("YAML (Rails)", f);
     else if (ext === ".resx") add(".NET .resx", f);

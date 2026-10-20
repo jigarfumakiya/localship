@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Flutter ARB and JSON translation files. `format: arb` reads the template's descriptions and
+  placeholder examples as translator context and turns a message that is one ICU plural into
+  plural forms, so Arabic gets all six. `format: json` reads nested or flat files, string arrays
+  and i18next plurals (`key_one`, `key_other`), or ICU messages with `placeholders: icu`.
+  `detect` finds both, and code usage is read from Dart (`AppLocalizations.of(context)!.key`)
+  and JavaScript (`t("key")`). New keys are written in the source's order.
 - `localship review` (and the `localship_review` MCP tool) opens a review page on this computer:
   source and translation side by side, plural forms with sample counts, right-to-left languages
   shown right-to-left, with comments, glossary and code usage. Edits go through the same checks as

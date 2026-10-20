@@ -76,6 +76,16 @@ function suggestId(t: TargetConfig): string {
     }
     case "xcstrings":
       return `xcstrings-${slug(path.posix.basename(t.path, ".xcstrings"))}`;
+    case "arb":
+    case "json": {
+      // lib/l10n/app_{locale}.arb → arb-app; locales/{locale}/common.json → json-common.
+      const name = path.posix
+        .basename(t.path)
+        .replace(/\.(arb|json)$/, "")
+        .replace("{locale}", "")
+        .replace(/^[-_.]+|[-_.]+$/g, "");
+      return `${t.format}-${slug(name || "messages")}`;
+    }
   }
 }
 

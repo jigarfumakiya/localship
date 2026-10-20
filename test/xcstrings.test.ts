@@ -12,7 +12,7 @@ import {
   parseJson,
   stringifyJson,
   XCODE_STYLE,
-} from "../src/formats/xcstrings/json.js";
+} from "../src/formats/json-tree.js";
 import { fixture } from "./helpers.js";
 
 const ROOT = fixture("xcstrings/app");

@@ -1,3 +1,4 @@
+import { scanIcu } from "./icu.js";
 import type { Placeholder } from "./model.js";
 
 /**
@@ -14,6 +15,7 @@ export const PLACEHOLDER_SYNTAXES = [
   "qt", // Qt: %1 … %99
   "ruby", // Ruby / Rails: %{name}
   "i18next", // {{name}}
+  "icu", // ICU MessageFormat: {name}, {count, plural, …}, as Flutter ARB and format.js use
   "none",
 ] as const;
 export type PlaceholderSyntax = (typeof PLACEHOLDER_SYNTAXES)[number];
@@ -60,6 +62,8 @@ export function findPlaceholders(text: string, syntax: PlaceholderSyntax): Place
         raw: m[0],
         positional: true,
       }));
+    case "icu":
+      return scanIcu(text).placeholders;
     case "none":
       return [];
   }

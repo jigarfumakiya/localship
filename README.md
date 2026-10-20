@@ -40,6 +40,8 @@ no server, no monthly bill.
   glossary and voice notes, and earlier translations of the same text.
 - 🔒 **Your files, your workflow.** No Localship server or account. Translation files stay in your
   repo, formatted the way your tools write them. You choose the AI that receives their content.
+- 👀 **Review in your browser.** `localship review` opens a page on your computer with source and
+  translation side by side, where you edit, approve or reject them, one at a time or all at once.
 - ✅ **Check before release.** Require current, approved translations in CI with
   `localship validate --require-approved`. No model call or API key needed for the check.
 - 💻 **Runs anywhere.** Claude Code, Cursor, VS Code, Codex, Gemini CLI, Claude Desktop or the
@@ -115,18 +117,29 @@ Wherever your app is today, one sentence gets it started.
 
 ## 📦 Formats
 
-| Format | Status |
-|---|---|
-| Android `strings.xml` | ✅ Supported |
-| Apple String Catalog `.xcstrings` | ✅ Supported |
-| gettext `.po` / `.pot` | ✅ Supported |
-| Flutter ARB `.arb` | 🗓️ Planned |
-| JSON (flat, nested, i18next, ICU) | 🗓️ Planned |
-| Apple `.strings` / `.stringsdict` | 🗓️ Planned |
-| XLIFF `.xliff` | 🗓️ Planned |
+| Format | Used by | Status |
+|---|---|---|
+| Android `strings.xml` | Android (Kotlin, Java, Compose) | ✅ Supported |
+| Apple String Catalog `.xcstrings` | iOS, macOS (SwiftUI, UIKit) | ✅ Supported |
+| gettext `.po` / `.pot` | Django, WordPress, PHP, C, Python | ✅ Supported |
+| Flutter ARB `.arb` | Flutter (`flutter gen-l10n`, `intl`) | ✅ Supported |
+| JSON (flat, nested, i18next, ICU) | React, Vue, Next.js, React Native (i18next, react-intl, next-intl) | ✅ Supported |
+| Apple `.strings` / `.stringsdict` | Older iOS projects | 🗓️ Planned |
+| XLIFF `.xliff` | Angular, translation agencies | 🗓️ Planned |
 
-Android string arrays and plurals, String Catalog plural variations, and gettext plural forms are
-all supported.
+Setup finds these on its own. To write the config by hand, a Flutter app and a web app look like
+this:
+
+```yaml
+targets:
+  - format: arb
+    path: lib/l10n/app_{locale}.arb            # the source language's file is the template
+  - format: json
+    path: public/locales/{locale}/common.json  # i18next; add `placeholders: icu` for react-intl or next-intl
+```
+
+Android string arrays and plurals, String Catalog plural variations, gettext plural forms, ICU
+plurals in ARB and JSON, and i18next `_one`/`_other` keys are all supported.
 
 Apple device/nested variations and substitutions, and Android strings in configuration-specific
 folders such as `values-ar-night`, are preserved but not translated or validated. Localship reports
@@ -268,11 +281,21 @@ No. Hand edits and anything approved are never replaced unless you explicitly as
 </details>
 
 <details>
-<summary><b>I have an iOS and an Android app. Can they share translations?</b></summary>
+<summary><b>I have an iOS, an Android and a web app. Can they share translations?</b></summary>
 
-Yes. One config can list both, and they share the same brief, glossary and voice notes. When the
-same text appears in both apps, the earlier translation is offered to the AI, so "Sign in"
-reads the same on both.
+Yes. One config can list all of them, and they share the same brief, glossary and voice notes.
+When the same text appears in more than one app, the earlier translation is offered to the AI, so
+"Sign in" reads the same everywhere.
+</details>
+
+<details>
+<summary><b>Does it work with Flutter, React or Next.js?</b></summary>
+
+Yes. Flutter's `.arb` files and JSON files for i18next, react-intl, next-intl and similar libraries
+are supported. ICU plurals (`{count, plural, one{…} other{…}}`) and i18next plural keys
+(`items_one`, `items_other`) get every form each language needs, so Arabic gets six. Translators
+also see where each key is used, from `AppLocalizations.of(context)!.save` in Dart or `t("nav.home")`
+in JavaScript.
 </details>
 
 <details>
@@ -304,12 +327,12 @@ to look for.
 | | Feature | Status |
 |---|---|---|
 | 📦 | Android, String Catalog and gettext formats | ✅ Done |
+| 🧩 | Flutter ARB and JSON (i18next, flat, nested, ICU) | ✅ Done |
 | 🧠 | Translation with context, checks, review, approval and cleanup | ✅ Done |
 | 🤖 | MCP server, agent skills, Claude Code plugin | ✅ Done |
-| 🧩 | Flutter ARB and JSON (i18next, flat, nested) | 🗓️ Planned |
+| 👀 | Review page for people (`localship review`) | ✅ Done |
 | ✅ | GitHub Action that checks pull requests | 🗓️ Planned |
 | 🔎 | Tools that find hardcoded text in Kotlin and Swift | 🗓️ Planned |
-| 👀 | Review page for people (`localship review`) | ✅ Done |
 | 🤖 | AI reviewer | 🗓️ Planned |
 | 🏪 | App Store and Play Store listings | 🗓️ Planned |
 | 📱 | Screenshot checks for cut-off and right-to-left text | 🗓️ Planned |

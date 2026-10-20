@@ -101,6 +101,8 @@ const FORMAT_LABEL: Record<string, string> = {
   "android-xml": "Android resources",
   po: "gettext PO",
   xcstrings: "String Catalog",
+  arb: "Flutter ARB",
+  json: "JSON",
 };
 
 /** Human summary of `detect`, as lines. */

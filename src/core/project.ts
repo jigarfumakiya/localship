@@ -1,5 +1,6 @@
 import path from "node:path";
 import { androidAdapter } from "../formats/android/adapter.js";
+import { arbAdapter, jsonAdapter } from "../formats/json/adapter.js";
 import { poAdapter } from "../formats/po/adapter.js";
 import type { FormatAdapter, Target } from "../formats/types.js";
 import { xcstringsAdapter } from "../formats/xcstrings/adapter.js";
@@ -15,6 +16,8 @@ const ADAPTERS: {
   "android-xml": androidAdapter,
   po: poAdapter,
   xcstrings: xcstringsAdapter,
+  arb: arbAdapter,
+  json: jsonAdapter,
 };
 
 export interface ProjectTarget {

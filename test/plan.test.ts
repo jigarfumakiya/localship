@@ -63,11 +63,11 @@ describe("plan", () => {
     const noLang = await plan(app(), "/a");
     expect(noLang.ready).toBe(false);
     expect(noLang.blockers.map((b) => b.kind)).toEqual(["no-locales"]);
-    const flutter = await plan(memoryFs({ "/f/lib/l10n/app_en.arb": "{}" }), "/f", {
+    const dotnet = await plan(memoryFs({ "/f/App/Strings.resx": "<root/>" }), "/f", {
       locales: ["hi"],
     });
-    expect(flutter.ready).toBe(false);
-    expect(flutter.blockers[0]?.message).toMatch(/Flutter ARB/);
+    expect(dotnet.ready).toBe(false);
+    expect(dotnet.blockers[0]?.message).toMatch(/\.resx/);
   });
 
   it("counts only what's left in a set-up project, and all of a new language", async () => {

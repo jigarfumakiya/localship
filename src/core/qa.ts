@@ -233,20 +233,26 @@ export type UiRole =
 
 /** Most specific first: an icon button's `contentDescription` is an accessibility label. */
 const ROLES: Array<[UiRole, RegExp]> = [
-  ["accessibility label", /contentDescription|accessibility(?:Label|Hint)/],
-  ["placeholder", /\bplaceholder\b|android:hint|\bhint\s*=|\b(?:Secure)?TextField\(/],
+  [
+    "accessibility label",
+    /contentDescription|accessibility(?:Label|Hint)|aria-label|semanticsLabel/,
+  ],
+  ["placeholder", /\bplaceholder\b|android:hint|\bhint\s*=|\bhintText:|\b(?:Secure)?TextField\(/],
   // Design systems wrap these (`AppButton`, `SmChip`), so any name ending in the kind counts.
   ["tab", /\b\w*Tab\s*\(|Navigation(?:Bar|Rail)Item|BottomNavigationItem|\.tabItem\b/],
   ["chip", /\b\w*Chip\s*\(/],
   [
     "button",
-    /\b\w*Button\s*[({]|<(?:\w+\.)*\w*Button\b|(?:confirm|dismiss)Button|set(?:Positive|Negative|Neutral)Button/,
+    /\b\w*Button\s*[({]|<(?:\w+\.)*\w*Button\b|<button\b|(?:confirm|dismiss)Button|set(?:Positive|Negative|Neutral)Button/,
   ],
   ["menu item", /DropdownMenuItem|<item\b[^>]*android:title|\bMenu\s*\{/],
-  ["toast", /Toast\.makeText|showSnackbar|Snackbar(?:\.make)?\(/],
+  ["toast", /Toast\.makeText|showSnackbar|Snack[bB]ar(?:\.make)?\(/],
   ["notification", /setContent(?:Title|Text)|NotificationCompat|UNMutableNotificationContent/],
   ["app name", /android:label=/],
-  ["title", /TopAppBar|\btitle\s*=|\.navigationTitle\(|setTitle\(|\.alert\(/],
+  [
+    "title",
+    /TopAppBar|\bAppBar\(|\btitle\s*[=:]|\.navigationTitle\(|setTitle\(|\.alert\(|<h[1-3]\b/,
+  ],
 ];
 
 /** The role most of a string's usages agree on. */

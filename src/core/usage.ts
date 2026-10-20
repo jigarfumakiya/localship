@@ -27,6 +27,13 @@ const STRING_LITERAL = /@?"((?:[^"\\\n]|\\.)*)"/g;
 const APPLE_SPEC =
   /%%|%(?:\d+\$)?[-+ #0]*\d*(?:\.\d+)?(?:hh|h|ll|l|q|z|t|j)?[@dDuUxXoOfeEgGcCsSaAp]/g;
 const SLOT = "\u0001";
+const DART_CODE = /\.dart$/;
+/** `AppLocalizations.of(context)!.save`, `S.of(context).save`, `S.current.save`, `context.l10n.save`. */
+const DART_REF =
+  /(?:AppLocalizations\.of\(\s*\w+\s*\)!?|S\.of\(\s*\w+\s*\)|S\.current|\bl10n|\bloc)\??\.([A-Za-z_]\w*)/g;
+const JS_CODE = /\.(m?[jt]sx?|vue|svelte|astro)$/;
+/** `t("nav.home")`, `i18n.t('x')`, `$t('x')`, `i18nKey="x"`; an i18next namespace (`common:`) is dropped. */
+const JS_REF = /(?:\$?\bt\(\s*|i18nKey=\{?\s*)(["'`])(?:[\w-]+:)?([\w.-]+)\1/g;
 
 /**
  * Finds where source strings are used, so translators see the screen (from the file path)
@@ -35,7 +42,7 @@ const SLOT = "\u0001";
  */
 export async function buildUsageIndex(project: Project): Promise<UsageIndex> {
   const formats = new Set(project.targets.map((t) => t.target.format));
-  const needsCode = formats.has("android-xml") || formats.has("xcstrings");
+  const needsCode = [...formats].some((f) => f !== "po");
   const files = needsCode ? (await walk(project.fs, project.root)).files : [];
   const lines = new Map<string, string[]>();
   const read = async (rel: string) => {
@@ -80,6 +87,22 @@ export async function buildUsageIndex(project: Project): Promise<UsageIndex> {
     }
   }
 
+  const dart = new Map<string, Usage[]>();
+  const js = new Map<string, Usage[]>();
+  for (const [format, code, ref, group, index] of [
+    ["arb", DART_CODE, DART_REF, 1, dart],
+    ["json", JS_CODE, JS_REF, 2, js],
+  ] as const) {
+    if (!formats.has(format)) continue;
+    for (const rel of files) {
+      if (!code.test(rel)) continue;
+      const text = await read(rel);
+      text.forEach((line, i) => {
+        for (const m of line.matchAll(ref)) add(index, m[group] as string, rel, text, i);
+      });
+    }
+  }
+
   // gettext files already say where each string is used (`#: app/views.py:12`).
   const po = new Map<string, Usage[]>();
   for (const { target } of project.targets) {
@@ -107,6 +130,10 @@ export async function buildUsageIndex(project: Project): Promise<UsageIndex> {
           return apple.get(normalizeCatalogKey(entry.key)) ?? [];
         case "po":
           return po.get(`${target.id}\u0000${entry.key}`) ?? [];
+        case "arb":
+          return dart.get(entry.key) ?? [];
+        case "json":
+          return js.get(entry.key) ?? [];
         default:
           return [];
       }
