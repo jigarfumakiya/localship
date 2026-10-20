@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0
 
 - `examples/flutter-app`: a small Flutter app translated into Arabic, French, Hindi and Japanese
   by a coding agent with Localship, with Flutter tests that hold for any correct translation.
