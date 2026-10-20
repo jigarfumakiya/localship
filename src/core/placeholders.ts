@@ -63,7 +63,7 @@ export function findPlaceholders(text: string, syntax: PlaceholderSyntax): Place
         positional: true,
       }));
     case "icu":
-      return scanIcu(text).placeholders;
+      return scanIcu(text, { pound: true }).placeholders;
     case "none":
       return [];
   }

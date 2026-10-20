@@ -3,10 +3,18 @@ import type { Placeholder } from "./model.js";
 /**
  * ICU MessageFormat, as Flutter ARB files, format.js and next-intl write it:
  * `Hi {name}`, `{count, plural, =0{No notes} one{# note} other{# notes}}`, `{sex, select, …}`.
- * Apostrophe quoting (`'{'`) is not modeled; braces must balance.
+ * The dialects differ: Flutter prints `#` as is, and quotes with apostrophes only when the
+ * project turns on `use-escaping` (then every `'` quotes, and `''` is an apostrophe).
  */
+export interface IcuDialect {
+  /** `#` in a plural stands for the count (format.js), rather than being text (Flutter). */
+  pound?: boolean;
+  /** Flutter `use-escaping`: `'…'` is literal text, `''` an apostrophe, a lone `'` an error. */
+  escaping?: boolean;
+}
 
 const COMPLEX = new Set(["plural", "select", "selectordinal"]);
+const PLURAL_SELECTOR = /^(=\d+|zero|one|two|few|many|other)$/;
 
 export interface IcuScan {
   placeholders: Placeholder[];
@@ -15,11 +23,10 @@ export interface IcuScan {
 }
 
 /**
- * The arguments a message uses. `#` inside a plural counts as that plural's argument; `pound`
- * names it for a single plural form read on its own. Plural arguments get type `d`, so plural
- * checks know they hold the count.
+ * The arguments a message uses. Plural arguments get type `d`, so plural checks know they hold
+ * the count; `count` names that argument for a single plural form read on its own.
  */
-export function scanIcu(text: string, pound?: string): IcuScan {
+export function scanIcu(text: string, dialect: IcuDialect = {}, count?: string): IcuScan {
   const placeholders: Placeholder[] = [];
   let i = 0;
 
@@ -34,22 +41,43 @@ export function scanIcu(text: string, pound?: string): IcuScan {
     while (i < text.length && !/[\s,{}]/.test(text[i] as string)) i++;
     return text.slice(start, i);
   };
+  /** Skips a quoted run at `i` (on a `'`), when escaping is on. */
+  const quote = () => {
+    if (text[i + 1] === "'") {
+      i += 2;
+      return;
+    }
+    const end = text.indexOf("'", i + 1);
+    if (end < 0) fail("Unmatched apostrophe: this project uses use-escaping, so write '' for one");
+    // Quoting is for literal braces. Quoted plain text means apostrophes that would vanish:
+    // "c'est l'heure" shows as "cest lheure".
+    if (!/[{}]/.test(text.slice(i + 1, end))) {
+      fail(
+        `Apostrophes quote text under use-escaping, so "${text.slice(i, end + 1)}" loses them; write '' for each`,
+      );
+    }
+    i = end + 1;
+  };
 
   // Reads message text until an unmatched `}` (or the end at the top level).
-  const message = (top: boolean, poundArg: string | undefined) => {
+  const message = (top: boolean, countArg: string | undefined) => {
     while (i < text.length) {
       const c = text[i];
       if (c === "}") {
         if (top) fail("Unmatched }");
         return;
       }
-      if (c === "#" && poundArg) {
-        placeholders.push({ id: poundArg, type: "d", raw: "#", positional: true });
+      if (c === "'" && dialect.escaping) {
+        quote();
+        continue;
+      }
+      if (c === "#" && countArg && dialect.pound) {
+        placeholders.push({ id: countArg, type: "d", raw: "#", positional: true });
         i++;
         continue;
       }
       if (c === "{") {
-        argument(poundArg);
+        argument(countArg);
         continue;
       }
       i++;
@@ -57,7 +85,7 @@ export function scanIcu(text: string, pound?: string): IcuScan {
     if (!top) fail("Missing }");
   };
 
-  const argument = (poundArg: string | undefined) => {
+  const argument = (countArg: string | undefined) => {
     const start = i;
     i++;
     skipSpace();
@@ -66,10 +94,10 @@ export function scanIcu(text: string, pound?: string): IcuScan {
     skipSpace();
     if (text[i] === "}") {
       i++;
-      // `{count}` inside its own plural is the count, the same as `#`.
+      // `{count}` inside its own plural is the count.
       placeholders.push({
         id: name,
-        ...(name === poundArg ? { type: "d" } : {}),
+        ...(name === countArg ? { type: "d" } : {}),
         raw: text.slice(start, i),
         positional: true,
       });
@@ -100,7 +128,7 @@ export function scanIcu(text: string, pound?: string): IcuScan {
     });
     if (text[i] !== ",") fail(`Expected , after {${name}, ${type}`);
     i++;
-    let cases = 0;
+    const cases: string[] = [];
     for (;;) {
       skipSpace();
       if (text[i] === "}") {
@@ -110,18 +138,21 @@ export function scanIcu(text: string, pound?: string): IcuScan {
       const selector = word();
       if (!selector) fail(`Expected a case in {${name}, ${type}}`);
       if (selector.startsWith("offset:")) continue;
+      if (type !== "select" && !PLURAL_SELECTOR.test(selector)) {
+        fail(`"${selector}" isn't a plural case; use =0, =1, zero, one, two, few, many or other`);
+      }
       skipSpace();
       if (text[i] !== "{") fail(`Expected { after ${selector}`);
       i++;
       message(false, type === "select" ? undefined : name);
       i++;
-      cases++;
+      cases.push(selector);
     }
-    if (!cases) fail(`{${name}, ${type}} has no cases`);
+    if (!cases.includes("other")) fail(`{${name}, ${type}} needs an "other" case`);
   };
 
   try {
-    message(true, pound);
+    message(true, count);
     return { placeholders };
   } catch (e) {
     if (!(e instanceof IcuError)) throw e;
@@ -137,6 +168,7 @@ class IcuError extends Error {}
  */
 export function splitIcuPlural(
   text: string,
+  dialect: IcuDialect = {},
 ): { arg: string; forms: Record<string, string> } | undefined {
   const head = /^\s*\{\s*([^\s,{}]+)\s*,\s*plural\s*,/.exec(text);
   if (!head) return undefined;
@@ -155,6 +187,12 @@ export function splitIcuPlural(
     const start = i;
     let depth = 1;
     while (i < text.length && depth > 0) {
+      if (text[i] === "'" && dialect.escaping) {
+        const end = text[i + 1] === "'" ? i + 1 : text.indexOf("'", i + 1);
+        if (end < 0) return undefined;
+        i = end + 1;
+        continue;
+      }
       if (text[i] === "{") depth++;
       else if (text[i] === "}") depth--;
       i++;
@@ -166,7 +204,7 @@ export function splitIcuPlural(
   return { arg, forms };
 }
 
-/** Writes plural forms back as one ICU plural, exact counts first, then CLDR order. */
+/** Writes plural forms back as one ICU plural, in the order given. */
 export function joinIcuPlural(arg: string, forms: Record<string, string>, order: string[]): string {
   return `{${arg}, plural, ${order.map((k) => `${k}{${forms[k]}}`).join(" ")}}`;
 }

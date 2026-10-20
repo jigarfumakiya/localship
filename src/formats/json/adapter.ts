@@ -1,5 +1,5 @@
 import path from "node:path";
-import { joinIcuPlural, scanIcu, splitIcuPlural } from "../../core/icu.js";
+import { type IcuDialect, joinIcuPlural, scanIcu, splitIcuPlural } from "../../core/icu.js";
 import {
   type Catalog,
   type Entry,
@@ -8,6 +8,7 @@ import {
   PLURAL_CATEGORIES,
   type PluralSpec,
   sortPluralKeys,
+  type ValueAnalysis,
 } from "../../core/model.js";
 import {
   expandPattern,
@@ -60,6 +61,7 @@ interface Dialect {
   syntax: PlaceholderSyntax;
   /** Plurals are one ICU message; otherwise one key per form, i18next style. */
   icuPlurals: boolean;
+  icu: IcuDialect;
   /** ARB: flat, with `@key` metadata and `@@locale`. */
   arb: boolean;
 }
@@ -85,12 +87,38 @@ interface LocaleFile {
 
 const SUFFIX = new RegExp(`^(.+)_(${PLURAL_CATEGORIES.join("|")})$`);
 const EXACT_FORMS = ["=0", "=1"];
+/** Flutter fills one slot for both spellings: `=1{…}` is `one{…}` (intl tries 0, 1, 2 exactly first). */
+const FLUTTER_EXACT: Record<string, string> = { "=0": "zero", "=1": "one", "=2": "two" };
 
 export const arbAdapter: FormatAdapter<ArbTarget> = {
   format: "arb",
-  open: (config, ctx) =>
-    openJson(config, ctx, { format: "arb", syntax: "icu", icuPlurals: true, arb: true }),
+  open: async (config, ctx) =>
+    openJson(config, ctx, {
+      format: "arb",
+      syntax: "icu",
+      icuPlurals: true,
+      arb: true,
+      // gen-l10n prints `#` as is; apostrophes quote only with `use-escaping: true`.
+      icu: { pound: false, escaping: await flutterEscaping(ctx.fs, ctx.root, config.path) },
+    }),
 };
+
+/** `use-escaping: true` in the l10n.yaml nearest the ARB folder (Flutter reads it from the package root). */
+async function flutterEscaping(
+  fs: Parameters<FormatAdapter<unknown>["open"]>[1]["fs"],
+  root: string,
+  pattern: string,
+): Promise<boolean> {
+  let dir = path.resolve(root, path.dirname(pattern));
+  for (;;) {
+    const file = path.join(dir, "l10n.yaml");
+    if (await fs.exists(file)) {
+      return /^use-escaping:\s*true\b/m.test(await fs.readFile(file));
+    }
+    if (dir === root || path.dirname(dir) === dir || !dir.startsWith(root)) return false;
+    dir = path.dirname(dir);
+  }
+}
 
 export const jsonAdapter: FormatAdapter<JsonTarget> = {
   format: "json",
@@ -101,6 +129,7 @@ export const jsonAdapter: FormatAdapter<JsonTarget> = {
       syntax,
       icuPlurals: syntax === "icu",
       arb: false,
+      icu: { pound: true },
     });
   },
 };
@@ -130,15 +159,18 @@ async function openJson(
         );
         return { text: value, placeholders, tags: [], lints: [] };
       }
-      const scan = scanIcu(value, entry.attrs?.icuArg);
-      return {
-        text: value,
-        placeholders: scan.placeholders,
-        tags: [],
-        lints: scan.error
-          ? [{ severity: "error", code: "icu-malformed", message: scan.error }]
-          : [],
-      };
+      const scan = scanIcu(value, dialect.icu, entry.attrs?.icuArg);
+      const lints: ValueAnalysis["lints"] = scan.error
+        ? [{ severity: "error", code: "icu-malformed", message: scan.error }]
+        : [];
+      if (!dialect.icu.pound && entry.message.kind === "plural" && value.includes("#")) {
+        lints.push({
+          severity: "warning",
+          code: "icu-pound",
+          message: `Flutter shows # as it is; write {${entry.attrs?.icuArg ?? "count"}} for the number`,
+        });
+      }
+      return { text: value, placeholders: scan.placeholders, tags: [], lints };
     },
     pluralSpec: (locale) => pluralSpec(locale, dialect),
     writeLocale: (catalog) => writeLocale(catalog),
@@ -425,7 +457,13 @@ function toUnits(
       });
       continue;
     }
-    const plural = dialect.icuPlurals ? splitIcuPlural(leaf.value) : undefined;
+    const plural = dialect.icuPlurals ? splitIcuPlural(leaf.value, dialect.icu) : undefined;
+    if (plural && dialect.arb) {
+      // In file order, so a later spelling of the same slot wins, as gen-l10n does.
+      const forms: Record<string, string> = {};
+      for (const [k, v] of Object.entries(plural.forms)) forms[FLUTTER_EXACT[k] ?? k] = v;
+      plural.forms = forms;
+    }
     add({
       key,
       message: plural
@@ -441,7 +479,22 @@ function toUnits(
 
 function pluralSpec(locale: string, dialect: Dialect): PluralSpec {
   const spec = cldrPluralSpec(locale);
-  if (dialect.icuPlurals) {
+  if (dialect.arb) {
+    // intl uses zero, one and two for exactly 0, 1 and 2 in any language, before CLDR's rule.
+    const exact = ["zero", "one", "two"].filter((id) => !spec.forms.some((f) => f.id === id));
+    spec.forms.unshift(
+      ...exact.map((id) => ({
+        id,
+        examples: String(["zero", "one", "two"].indexOf(id)),
+        countImplied: true,
+        optional: true,
+      })),
+    );
+    spec.forms.sort(
+      (a, b) => PLURAL_CATEGORIES.indexOf(a.id as never) - PLURAL_CATEGORIES.indexOf(b.id as never),
+    );
+    if (exact.length) spec.source = "CLDR + Flutter exact 0, 1, 2";
+  } else if (dialect.icuPlurals) {
     // ICU lets any language give exact counts their own text: =0{No notes}.
     spec.forms.unshift(
       ...EXACT_FORMS.map((id) => ({

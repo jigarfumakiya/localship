@@ -101,7 +101,7 @@ const FORMAT_NOTES: Record<string, string> = {
   po: "gettext PO. Values are plain text; keep placeholders and leading or trailing newlines exactly as in the source.",
   xcstrings:
     "Apple String Catalog. Values are plain text with Apple placeholders (%@, %lld, %1$@); you may number them to reorder.",
-  arb: "Flutter ARB. Values are ICU messages: keep {name} placeholders as written (never translate the name inside braces). For {x, select, …} keep the case names and translate only the text inside each case.",
+  arb: "Flutter ARB. Values are ICU messages: keep {name} placeholders as written (never translate the name inside braces), and write the count as {count}, never #. For {x, select, …} keep the case names and translate only the text inside each case. If a check reports use-escaping, write an apostrophe as ''.",
   json: "JSON translation file. Keep placeholders such as {{name}} or {name} exactly, and never translate the name inside them. For ICU {x, select, …} keep the case names and translate only the text inside each case.",
 };
 

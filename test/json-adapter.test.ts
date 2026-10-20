@@ -50,8 +50,11 @@ function web(files: Record<string, string> = {}, extra = "") {
 const open = (fs: ReturnType<typeof memoryFs>, cwd: string) => openProject(fs, { cwd });
 
 describe("ICU messages", () => {
-  it("finds arguments, counting # and the plural's own {count} as the count", () => {
-    const { placeholders } = scanIcu("{n, plural, one{# file in {dir}} other{{n} files in {dir}}}");
+  it("finds arguments, counting # (where the dialect has it) and {count} as the count", () => {
+    const { placeholders } = scanIcu(
+      "{n, plural, one{# file in {dir}} other{{n} files in {dir}}}",
+      { pound: true },
+    );
     expect(placeholders.map((p) => [p.id, p.raw, p.type])).toEqual([
       ["n", "{n, plural}", "d"],
       ["n", "#", "d"],
@@ -61,6 +64,29 @@ describe("ICU messages", () => {
     ]);
     expect(scanIcu("Hi {name").error).toMatch(/\{name/);
     expect(scanIcu("Hi name}").error).toBe("Unmatched }");
+    // Flutter prints # as is.
+    expect(
+      scanIcu("{n, plural, one{# file} other{# files}}").placeholders.map((p) => p.raw),
+    ).toEqual(["{n, plural}"]);
+  });
+
+  it("checks plural cases and other, as gen-l10n and format.js do", () => {
+    expect(scanIcu("{n, plural, single{x} other{y}}").error).toMatch(
+      /"single" isn't a plural case/,
+    );
+    expect(scanIcu("{n, plural, one{x}}").error).toMatch(/needs an "other" case/);
+    expect(scanIcu("{g, select, male{He}}").error).toMatch(/needs an "other" case/);
+    expect(scanIcu("{g, select, male{He} other{They}}").error).toBeUndefined();
+  });
+
+  it("reads apostrophes as quotes only with Flutter's use-escaping", () => {
+    expect(scanIcu("Ouvrir l'application").error).toBeUndefined();
+    const escaping = { escaping: true };
+    expect(scanIcu("Ouvrir l'application", escaping).error).toMatch(/write '' for one/);
+    expect(scanIcu("Ouvrir l''application {app}", escaping).placeholders).toHaveLength(1);
+    // Two apostrophes pair up and vanish: Flutter would show "cest lheure".
+    expect(scanIcu("c'est l'heure", escaping).error).toMatch(/"'est l'" loses them/);
+    expect(scanIcu("Use '{braces}' as is", escaping).placeholders).toEqual([]);
   });
 
   it("splits a message that is one plural, and leaves anything else whole", () => {
@@ -87,16 +113,23 @@ describe("Flutter ARB", () => {
     expect(hello?.comment).toBe(
       "Greeting on the home screen. Placeholders: {name} (String, e.g. Bob)",
     );
-    expect(notes?.source).toEqual({ "=0": "No notes", one: "One note", other: "{count} notes" });
+    // gen-l10n fills one slot for =0 and zero, so Localship reads them as one form.
+    expect(notes?.source).toEqual({ zero: "No notes", one: "One note", other: "{count} notes" });
     expect(notes?.pluralForms?.map((f) => f.form)).toEqual([
-      "=0",
-      "=1",
       "zero",
       "one",
       "two",
       "few",
       "many",
       "other",
+    ]);
+    // Japanese has only `other`, but intl still uses zero, one and two for exactly 0, 1 and 2.
+    const ja = p.targets[0]?.target.pluralSpec("ja");
+    expect(ja?.forms.map((f) => [f.id, f.optional ?? false])).toEqual([
+      ["zero", true],
+      ["one", true],
+      ["two", true],
+      ["other", false],
     ]);
     expect(greeting?.placeholders).toEqual(["{sex, select}"]);
   });
@@ -110,7 +143,6 @@ describe("Flutter ARB", () => {
           locale: "ar",
           key: "notes",
           value: {
-            "=0": "لا ملاحظات",
             zero: "لا ملاحظات",
             one: "ملاحظة واحدة",
             two: "ملاحظتان",
@@ -141,7 +173,7 @@ describe("Flutter ARB", () => {
         "@@locale": "ar",
         hello: "مرحبًا {name}!",
         notes:
-          "{count, plural, =0{لا ملاحظات} zero{لا ملاحظات} one{ملاحظة واحدة} two{ملاحظتان} few{{count} ملاحظات} many{{count} ملاحظة} other{{count} ملاحظة}}",
+          "{count, plural, zero{لا ملاحظات} one{ملاحظة واحدة} two{ملاحظتان} few{{count} ملاحظات} many{{count} ملاحظة} other{{count} ملاحظة}}",
       }),
     );
     expect(
@@ -149,6 +181,62 @@ describe("Flutter ARB", () => {
         (i) => i.severity === "error",
       ),
     ).toEqual([]);
+  });
+
+  it("treats # as text and follows use-escaping from l10n.yaml", async () => {
+    const fs = flutter({ "/p/l10n.yaml": "arb-dir: lib/l10n\nuse-escaping: true\n" });
+    fs.files.set(
+      "/p/localship.yaml",
+      fs.files.get("/p/localship.yaml")?.replace("ar, pt-BR", "fr") ?? "",
+    );
+    const result = await submit(
+      await open(fs, "/p"),
+      [
+        {
+          locale: "fr",
+          key: "notes",
+          value: { zero: "Aucune note", one: "# note", other: "# notes" },
+        },
+        { locale: "fr", key: "hello", value: "Bonjour {name}, c'est l'heure" },
+      ],
+      { usages: false, dryRun: true },
+    );
+    const codes = Object.fromEntries(
+      result.rejected.map((r) => [r.key, r.errors.map((e) => e.code)]),
+    );
+    expect(codes.notes).toContain("plural-count-missing");
+    expect(codes.hello).toEqual(["icu-malformed"]);
+    const fixed = await submit(
+      await open(fs, "/p"),
+      [
+        {
+          locale: "fr",
+          key: "notes",
+          value: {
+            zero: "Aucune note",
+            one: "{count} note",
+            many: "{count} de notes",
+            other: "{count} notes",
+          },
+        },
+        { locale: "fr", key: "hello", value: "Bonjour {name}, c''est l''heure !" },
+      ],
+      { usages: false, dryRun: true },
+    );
+    expect(fixed.rejected).toEqual([]);
+  });
+
+  it("reads =1 in a translation as Flutter's one, and writes it back as one", async () => {
+    const fs = flutter({
+      "/p/lib/l10n/app_ar.arb": json({
+        notes: "{count, plural, =0{صفر} zero{لا شيء} =1{واحدة} other{{count}}}",
+      }),
+    });
+    const p = await open(fs, "/p");
+    expect(p.targets[0]?.target.locales.get("ar")?.entries.get("notes")?.message).toEqual({
+      kind: "plural",
+      forms: { zero: "لا شيء", one: "واحدة", other: "{count}" },
+    });
   });
 
   it("names new files the Flutter way and keeps an existing file's other keys", async () => {

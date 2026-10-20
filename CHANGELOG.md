@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Flutter ARB follows gen-l10n: `=0`/`=1`/`=2` are read as `zero`/`one`/`two` (one slot in
+  Flutter), so Arabic is no longer asked for both; `zero`, `one` and `two` are optional in any
+  language, as `intl` uses them for exactly 0, 1 and 2. `#` is text in Flutter, so a form using it
+  instead of `{count}` is flagged. With `use-escaping: true` in `l10n.yaml`, apostrophes that would
+  break the build or vanish ("c'est l'heure") are errors. ICU plurals and selects need `other`,
+  and plural cases must be known keywords.
 - Flutter ARB and JSON translation files. `format: arb` reads the template's descriptions and
   placeholder examples as translator context and turns a message that is one ICU plural into
   plural forms, so Arabic gets all six. `format: json` reads nested or flat files, string arrays

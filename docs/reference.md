@@ -366,11 +366,17 @@ translation.
   New files are named the Flutter way (`app_pt_BR.arb`) and start with `@@locale`.
 - **Context:** the template's `@key` description and placeholder types and examples become the
   comment translators see. Translation files get only the messages, not the metadata.
-- **ICU:** a message that is exactly one `{count, plural, …}` becomes plural forms, so every
-  form the language needs is asked for and checked. `=0` and `=1` are optional in any language.
-  Messages with text around a plural, `select` or nested plurals are translated whole, with
-  their arguments checked and braces required to balance (`icu-malformed`). Apostrophe quoting
-  isn't modeled.
+- **ICU, as gen-l10n reads it:** a message that is exactly one `{count, plural, …}` becomes
+  plural forms, so every form the language needs is asked for and checked. Flutter fills one
+  slot for `=0` and `zero` (and `=1`/`one`, `=2`/`two`), and `intl` uses them for exactly 0, 1
+  and 2 in any language. So Localship reads `=N` as the keyword, offers `zero`, `one` and `two`
+  as optional where CLDR doesn't need them, and writes the keyword. Messages with text around a
+  plural, `select` or nested plurals are translated whole, with their arguments checked.
+- **Checks:** braces must balance, plural cases must be `=0`–`=2` or a CLDR keyword, and plurals
+  and selects need `other` (`icu-malformed`). `#` is plain text in Flutter, so a form that uses it
+  instead of `{count}` is flagged. With `use-escaping: true` in `l10n.yaml`, apostrophes quote
+  text: a lone `'`, or quoted text with no braces in it ("c'est l'heure" would show as
+  "cest lheure"), is an error, and `''` is an apostrophe.
 
 ### JSON
 
