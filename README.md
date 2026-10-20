@@ -126,7 +126,7 @@ Wherever your app is today, one sentence gets it started.
 > touching a translation file.
 
 <p align="center">
-  <img src="docs/images/review-page.png" alt="Localship review page: English source next to editable Arabic translations, with Save, Approve, Mark reviewed and Reject on each string, and Approve all at the top" width="820">
+  <img src="docs/images/review-page.png" alt="Localship review page: English source next to editable Arabic translations, with Save, Approve and Reject on each string, and Approve all at the top" width="820">
 </p>
 
 - ✏️ **Edit in place.** Every save goes through the same checks as the agent's translations,

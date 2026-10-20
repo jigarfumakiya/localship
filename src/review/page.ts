@@ -185,13 +185,10 @@ function card(item) {
     show(!warns.length, warns.length ? "Saved with warnings: " + warns.map((w) => w.message).join("; ") : "Saved as draft");
     refresh();
   });
-  const approveBtn = (to, label) => {
-    const b = el("button", { textContent: label });
-    b.onclick = () => act("/api/approve", { to, items: [{ target: item.target, locale: item.locale, key: item.key }] }, (r) =>
-      r.changed.length ? (show(true, label === "Approve" ? "Approved" : "Marked reviewed"), refresh())
-        : show(false, "Nothing changed. Save your edits first."));
-    return b;
-  };
+  const approve = el("button", { textContent: "Approve" });
+  approve.onclick = () => act("/api/approve", { items: [{ target: item.target, locale: item.locale, key: item.key }] }, (r) =>
+    r.changed.length ? (show(true, "Approved"), refresh())
+      : show(false, "Nothing changed. Save your edits first."));
   const reject = el("button", { textContent: "Reject" });
   reject.onclick = () => act("/api/reject", {}, (r) =>
     r.removed.length ? (show(true, "Rejected; it will be translated again"), refresh())
@@ -231,8 +228,7 @@ function card(item) {
         ...inputs.map((f) => f.label ? el("div", { className: "form" }, el("div", { className: "label", textContent: f.label }), f.input) : f.input))),
     el("div", { className: "meta" }, ...meta),
     el("div", { className: "actions" }, save,
-      canApprove && approveBtn("approved", "Approve"),
-      canApprove && item.state !== "reviewed" && approveBtn("reviewed", "Mark reviewed"),
+      canApprove && approve,
       ["draft", "stale"].includes(item.state) && reject, msg));
 }
 

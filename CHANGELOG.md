@@ -30,7 +30,7 @@
 - `localship review` (and the `localship_review` MCP tool) opens a review page on this computer:
   source and translation side by side, plural forms with sample counts, right-to-left languages
   shown right-to-left, with comments, glossary and code usage. Edits go through the same checks as
-  `submit`; Approve, Mark reviewed and Reject use `approve` and `remove`. Localhost only, with a
+  `submit`; Approve and Reject use `approve` and `remove`. Localhost only, with a
   random token in the link.
 - The pre-release config name `l10n.config.yaml` (with its `.l10n` folder) is no longer read;
   use `.localship/config.yaml`.
