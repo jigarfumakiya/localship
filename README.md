@@ -70,6 +70,9 @@ Agent:  Translating 18 strings into Hindi and Arabic…
 You:    Review the Arabic, then approve them.
 Agent:  Two small fixes made. All approved.
 
+You:    I'd like to check the Hindi myself.
+Agent:  Review page is open in your browser: edit, approve or reject each string.
+
 You:    I reworded two buttons. Update the translations.
 Agent:  Updated the 2 changed strings. Your hand edit in Hindi was kept.
 ```
@@ -113,7 +116,32 @@ Wherever your app is today, one sentence gets it started.
 | ✏️ You changed some copy | "Update the translations." Only changed strings are redone |
 | 🧹 You deleted or renamed strings | "Clean up old translations." |
 | 👀 Ready to check the result | "Review the Arabic translations." |
-| 🖥️ Want to check them yourself | "Open the review page." Source and translation side by side in your browser |
+| 🖥️ Want to check them yourself | **"Open the review page."** Source and translation side by side in your browser ✨ New |
+
+### 🖥️ Review translations in your browser
+
+> [!TIP]
+> **New:** ask *"Open the review page"*, or run `localship review`. A local editor opens with
+> every translation next to its source, so you or a native speaker can check them without
+> touching a translation file.
+
+<p align="center">
+  <img src="docs/images/review-page.png" alt="Localship review page: English source next to editable Arabic translations, with Save, Approve, Mark reviewed and Reject on each string, and Approve all at the top" width="820">
+</p>
+
+- ✏️ **Edit in place.** Every save goes through the same checks as the agent's translations,
+  so a broken placeholder is refused with the reason.
+- ✅ **Approve one, or all at once.** Filter by language, state or text, then **Approve all**
+  approves just what's shown.
+- 🧭 **Context on every string.** The comment, glossary terms, placeholders to keep, and the code
+  that uses it. Right-to-left languages show right-to-left, and plurals show every form with
+  sample counts.
+- 🔒 **Stays on your computer.** It runs on `127.0.0.1` with a private link, with no account and
+  no upload.
+
+```sh
+localship review --locale ar     # opens in your browser; --no-open just prints the link
+```
 
 ## 📦 Formats
 
