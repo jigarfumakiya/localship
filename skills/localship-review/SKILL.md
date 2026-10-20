@@ -44,6 +44,9 @@ installed, ask to install it once with `npm install -g localship`.
 5. Report to the user: what you changed and why, and anything you're unsure of (ambiguous
    source, missing context). Group by locale. If you can't judge a language well, say so.
 
+   If the user wants to read or fix translations themselves, `localship review` (MCP:
+   `localship_review`) opens a page in their browser for that; give them the link.
+
 6. **Approve only when the user says so:**
    - `localship approve --locale hi` approves every draft in that locale;
    - `--keys a,b` approves specific strings; `--reviewed` marks them reviewed instead;

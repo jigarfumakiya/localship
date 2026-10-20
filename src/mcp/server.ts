@@ -24,6 +24,7 @@ import {
 } from "../core/workflow.js";
 import { detect } from "../detect/detect.js";
 import { hardcodedNotes } from "../detect/hardcoded.js";
+import { type ReviewServer, startReview } from "../review/server.js";
 import { TRANSLATION_RULES } from "../translate/prompt.js";
 import { translateProject } from "../translate/translate.js";
 
@@ -292,6 +293,27 @@ ${TRANSLATION_RULES}`,
     },
     async ({ cwd, from, reviewed, ...o }) =>
       approve(await project(cwd), { ...o, states: from, to: reviewed ? "reviewed" : "approved" }),
+  );
+
+  const reviews = new Map<string, Promise<ReviewServer>>();
+  tool(
+    "localship_review",
+    "Start a review page on this computer where a person reads, edits, approves or rejects translations in the browser, and return its link. Use when the user wants to review translations themselves; give them the link. It stays up while this server runs; calling again returns the same link.",
+    {
+      cwd: cwdArg,
+      locales: localesArg,
+      states: statesArg.describe("States shown at first (default: draft, edited, untracked)"),
+    },
+    async ({ cwd, locales, states }) => {
+      const key = JSON.stringify([dir(cwd), locales, states]);
+      let review = reviews.get(key);
+      if (!review) {
+        review = startReview({ fs, cwd: dir(cwd), locales, states });
+        reviews.set(key, review);
+        review.catch(() => reviews.delete(key));
+      }
+      return { url: (await review).url };
+    },
   );
 
   tool(

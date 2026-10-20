@@ -460,6 +460,29 @@ program
   );
 
 program
+  .command("review")
+  .description("Open a review page in your browser: edit, approve or reject translations")
+  .option("-l, --locale <list>", "comma-separated locales", locales)
+  .option("--states <list>", "states shown at first (default: draft,edited,untracked)", states)
+  .option("-p, --port <n>", "port to listen on (default: any free port)", count, 0)
+  .option("--no-open", "print the link without opening a browser")
+  .action(
+    async (opts: { locale?: string[]; states?: EntryState[]; port: number; open: boolean }) => {
+      const { startReview, openInBrowser } = await import("../review/server.js");
+      const review = await startReview({
+        fs: nodeFs,
+        ...globals(),
+        locales: opts.locale,
+        states: opts.states,
+        port: opts.port,
+      });
+      console.log(`Review page: ${review.url}`);
+      console.log("Only this computer can open it. Press Ctrl+C to stop.");
+      if (opts.open) openInBrowser(review.url);
+    },
+  );
+
+program
   .command("mcp")
   .description("Run the MCP server over stdio, for Claude, Cursor, Codex and other MCP clients")
   .action(async () => {
